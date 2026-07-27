@@ -1,0 +1,15 @@
+**/bin/
+**/obj/
+
+.idea/
+.vs/
+*.user
+*.suo
+
+.env
+.env.*
+!.env.example
+!.env.backend.example
+!.env.db.example
+
+pg/data/
