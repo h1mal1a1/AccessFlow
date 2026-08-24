@@ -7,4 +7,6 @@ public class BulkOperationItem
     public long IdClient { get; set; }
     public required string Status { get; set; }
     public string? Error { get; set; }
+    public Client Client { get; set; } = null!;
+    public BulkOperation BulkOperation { get; set; } = null!;
 }

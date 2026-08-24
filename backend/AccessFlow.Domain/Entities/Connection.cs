@@ -11,4 +11,6 @@ public class Connection
     public required string Status { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }
+    public Client Client { get; set; } = null!;
+    public ICollection<Notification> Notifications { get; set; } = [];
 }

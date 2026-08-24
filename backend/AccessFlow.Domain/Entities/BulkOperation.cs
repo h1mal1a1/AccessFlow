@@ -9,4 +9,5 @@ public class BulkOperation
     public int ErrorProcessed { get; set; }
     public DateTimeOffset StartAt { get; set; }
     public DateTimeOffset? EndAt { get; set; }
+    public ICollection<BulkOperationItem> BulkOperationItems { get; set; } = [];
 }

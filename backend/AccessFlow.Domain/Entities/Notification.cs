@@ -8,4 +8,6 @@ public class Notification
     public required string Status { get; set; }
     public DateTimeOffset? SendAt { get; set; }
     public string? Error { get; set; }
+    public Connection Connection { get; set; } = null!;
+    public Client Client { get; set; } = null!;
 }
