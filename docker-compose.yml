@@ -9,6 +9,24 @@ services:
     env_file:
       - .env.backend
     depends_on:
+      migrator:
+        condition: service_completed_successfully
+    networks:
+      - accessflow-network
+
+  migrator:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: migrator
+    container_name: access-flow-migrator
+    env_file:
+      - .env.backend
+    entrypoint:
+      - /bin/sh
+      - -c
+      - 'exec ./efbundle --connection "$$ConnectionStrings__DefaultConnection"'
+    depends_on:
       db:
         condition: service_healthy
     networks:

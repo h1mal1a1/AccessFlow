@@ -5,7 +5,7 @@
 .vs/
 *.user
 *.suo
-
+planForMe.txt
 .env
 .env.*
 !.env.example
