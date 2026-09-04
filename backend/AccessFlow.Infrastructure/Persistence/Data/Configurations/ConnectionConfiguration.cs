@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using AccessFlow.Domain.Entities;
+using AccessFlow.Domain.Constants;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace AccessFlow.Infrastructure.Persistence.Data.Configurations;
@@ -23,7 +24,7 @@ public class ConnectionConfiguration : IEntityTypeConfiguration<Connection>
             .HasForeignKey(x => x.IdClient)
             .OnDelete(DeleteBehavior.Cascade);
 
-        builder.HasQueryFilter(x => x.Client.Status != "Deleted");
+        builder.HasQueryFilter(x => x.Client.Status != ClientStatus.Deleted);
 
         builder.Property(x => x.IdExternal).HasColumnName("id_external").IsRequired();
         builder.Property(x => x.Name).HasColumnName("name").IsRequired();

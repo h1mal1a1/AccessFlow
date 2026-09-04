@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using AccessFlow.Domain.Entities;
+using AccessFlow.Domain.Constants;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace AccessFlow.Infrastructure.Persistence.Data.Configurations;
@@ -21,7 +22,7 @@ public class BulkOperationItemConfiguration : IEntityTypeConfiguration<BulkOpera
         builder.Property(x => x.IdBulkOperation)
             .HasColumnName("id_bulk_operation")
             .IsRequired();
-        builder.HasQueryFilter(x => x.Client.Status != "Deleted");
+        builder.HasQueryFilter(x => x.Client.Status != ClientStatus.Deleted);
         builder.HasOne(x => x.Client)
             .WithMany(x => x.BulkOperationItems)
             .HasForeignKey(x => x.IdClient)

@@ -1,13 +1,13 @@
 using AccessFlow.Application.Abstractions;
 using AccessFlow.Application.Clients.DTOs;
 using AccessFlow.Domain.Entities;
-
+using AccessFlow.Domain.Constants;
 namespace AccessFlow.Application.Clients;
 
 public class ClientService(IClientRepository repository) : IClientService
 {
     private readonly IClientRepository _clientRepository = repository;
-    public async Task CreateClientAsync(CreateClientDto createClientDto, CancellationToken cancellationToken)
+    public async Task<long> CreateClientAsync(CreateClientDto createClientDto, CancellationToken cancellationToken)
     {
         var now = DateTimeOffset.UtcNow;
         Client client = new()
@@ -15,11 +15,12 @@ public class ClientService(IClientRepository repository) : IClientService
             Email = createClientDto.Email,
             PhoneNumber = createClientDto.PhoneNumber,
             Comment = createClientDto.Comment,
-            Status = "Active",
+            Status = ClientStatus.Deleted,
             CreatedAt = now,
             UpdatedAt = now,
         };
         await _clientRepository.AddClientAsync(client, cancellationToken);
+        return client.Id;
     }
     public async Task<ClientDto> GetClientAsync(long id, CancellationToken cancellationToken)
     {
@@ -33,9 +34,9 @@ public class ClientService(IClientRepository repository) : IClientService
             Status = client.Status
         };
     }
-    public async Task<List<ClientDto>> GetClientsAsync(CancellationToken cancellationToken)
+    public async Task<List<ClientDto>> GetClientsAsync(int page, int pageSize, CancellationToken cancellationToken)
     {
-        var clients = await _clientRepository.GetClientsAsync(cancellationToken);
+        var clients = await _clientRepository.GetClientsAsync(page, pageSize, cancellationToken);
         return [.. clients.Select(client =>
             new ClientDto()
             {

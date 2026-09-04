@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using AccessFlow.Domain.Entities;
+using AccessFlow.Domain.Constants;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace AccessFlow.Infrastructure.Persistence.Data.Configurations;
@@ -22,9 +23,10 @@ public class ClientConfiguration : IEntityTypeConfiguration<Client>
 
         builder.Property(x => x.Status)
             .HasColumnName("status")
+            .HasConversion<string>()
             .IsRequired();
 
-        builder.HasQueryFilter(x => x.Status != "Deleted");
+        builder.HasQueryFilter(x => x.Status != ClientStatus.Deleted);
 
         builder.Property(x => x.PhoneNumber)
             .HasColumnName("phone_number")
