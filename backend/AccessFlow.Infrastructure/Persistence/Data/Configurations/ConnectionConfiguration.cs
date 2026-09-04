@@ -23,6 +23,8 @@ public class ConnectionConfiguration : IEntityTypeConfiguration<Connection>
             .HasForeignKey(x => x.IdClient)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasQueryFilter(x => x.Client.Status != "Deleted");
+
         builder.Property(x => x.IdExternal).HasColumnName("id_external").IsRequired();
         builder.Property(x => x.Name).HasColumnName("name").IsRequired();
         builder.Property(x => x.ConnectionString).HasColumnName("connection_string").IsRequired();

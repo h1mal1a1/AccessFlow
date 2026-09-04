@@ -1,10 +1,11 @@
+using AccessFlow.Application.Abstractions;
 using AccessFlow.Infrastructure.Persistence.Data;
+using AccessFlow.Infrastructure.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AccessFlow.Infrastructure;
-
 
 public static class DependencyInjection
 {
@@ -14,6 +15,7 @@ public static class DependencyInjection
             throw new InvalidOperationException("Connection string \'DefaultConnection\' not found");
 
         services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
+        services.AddScoped<IClientRepository, ClientRepository>();
         return services;
     }
 }

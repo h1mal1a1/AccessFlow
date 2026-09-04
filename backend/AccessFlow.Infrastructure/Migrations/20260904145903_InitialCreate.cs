@@ -37,6 +37,7 @@ namespace AccessFlow.Infrastructure.Migrations
                     id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     email = table.Column<string>(type: "text", nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false),
                     phone_number = table.Column<string>(type: "text", nullable: false),
                     comment = table.Column<string>(type: "text", nullable: true),
                     created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
@@ -142,16 +143,14 @@ namespace AccessFlow.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "ux_clients_email",
+                name: "ix_clients_email",
                 table: "clients",
-                column: "email",
-                unique: true);
+                column: "email");
 
             migrationBuilder.CreateIndex(
-                name: "ux_clients_phone_number",
+                name: "ix_clients_phone_number",
                 table: "clients",
-                column: "phone_number",
-                unique: true);
+                column: "phone_number");
 
             migrationBuilder.CreateIndex(
                 name: "IX_connections_id_client",

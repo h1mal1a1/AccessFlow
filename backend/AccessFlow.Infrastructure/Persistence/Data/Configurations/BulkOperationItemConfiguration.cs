@@ -21,7 +21,7 @@ public class BulkOperationItemConfiguration : IEntityTypeConfiguration<BulkOpera
         builder.Property(x => x.IdBulkOperation)
             .HasColumnName("id_bulk_operation")
             .IsRequired();
-
+        builder.HasQueryFilter(x => x.Client.Status != "Deleted");
         builder.HasOne(x => x.Client)
             .WithMany(x => x.BulkOperationItems)
             .HasForeignKey(x => x.IdClient)
