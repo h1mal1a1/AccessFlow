@@ -197,15 +197,18 @@ namespace AccessFlow.Infrastructure.Migrations
 
                     b.HasIndex("IdExternal")
                         .IsUnique()
-                        .HasDatabaseName("ux_connections_id_external");
+                        .HasDatabaseName("ux_connections_id_external")
+                        .HasFilter("\"status\" <> 'Deleted'");
 
                     b.HasIndex("Name")
                         .IsUnique()
-                        .HasDatabaseName("ux_connections_name");
+                        .HasDatabaseName("ux_connections_name")
+                        .HasFilter("\"status\" <> 'Deleted'");
 
                     b.HasIndex("SubUrl")
                         .IsUnique()
-                        .HasDatabaseName("ux_connections_sub_url");
+                        .HasDatabaseName("ux_connections_sub_url")
+                        .HasFilter("\"status\" <> 'Deleted'");
 
                     b.ToTable("connections", (string)null);
                 });

@@ -16,6 +16,7 @@ public static class DependencyInjection
 
         services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connectionString));
         services.AddScoped<IClientRepository, ClientRepository>();
+        services.AddScoped<IConnectionRepository, ConnectionRepository>();
         return services;
     }
 }

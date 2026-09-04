@@ -1,4 +1,5 @@
 using AccessFlow.Application.Clients.Exceptions;
+using AccessFlow.Application.Connections.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
@@ -9,7 +10,7 @@ public class GlobalExceptionHandler : IExceptionHandler
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception,
         CancellationToken cancellationToken)
     {
-        if (exception is not ClientNotFoundException)
+        if (exception is not ClientNotFoundException && exception is not ConnectionNotFoundException)
             return false;
 
         httpContext.Response.StatusCode = StatusCodes.Status404NotFound;
@@ -18,7 +19,7 @@ public class GlobalExceptionHandler : IExceptionHandler
             new ProblemDetails
             {
                 Status = StatusCodes.Status404NotFound,
-                Title = "Client not found",
+                Title = "Resource not found",
                 Detail = exception.Message
             },
             cancellationToken);

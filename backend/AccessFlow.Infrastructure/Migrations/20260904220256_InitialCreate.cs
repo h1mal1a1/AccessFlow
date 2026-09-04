@@ -161,19 +161,22 @@ namespace AccessFlow.Infrastructure.Migrations
                 name: "ux_connections_id_external",
                 table: "connections",
                 column: "id_external",
-                unique: true);
+                unique: true,
+                filter: "\"status\" <> 'Deleted'");
 
             migrationBuilder.CreateIndex(
                 name: "ux_connections_name",
                 table: "connections",
                 column: "name",
-                unique: true);
+                unique: true,
+                filter: "\"status\" <> 'Deleted'");
 
             migrationBuilder.CreateIndex(
                 name: "ux_connections_sub_url",
                 table: "connections",
                 column: "sub_url",
-                unique: true);
+                unique: true,
+                filter: "\"status\" <> 'Deleted'");
 
             migrationBuilder.CreateIndex(
                 name: "IX_notifications_id_client",

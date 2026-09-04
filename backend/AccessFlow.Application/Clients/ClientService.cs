@@ -15,7 +15,7 @@ public class ClientService(IClientRepository repository) : IClientService
             Email = createClientDto.Email,
             PhoneNumber = createClientDto.PhoneNumber,
             Comment = createClientDto.Comment,
-            Status = ClientStatus.Deleted,
+            Status = ClientStatus.Active,
             CreatedAt = now,
             UpdatedAt = now,
         };
@@ -72,4 +72,6 @@ public class ClientService(IClientRepository repository) : IClientService
             }
         )];
     }
+    public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken) =>
+        await _clientRepository.ExistsAsync(id, cancellationToken);
 }

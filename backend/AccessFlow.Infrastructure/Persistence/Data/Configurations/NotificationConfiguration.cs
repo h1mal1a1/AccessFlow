@@ -23,7 +23,9 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
         builder.Property(x => x.IdClient)
             .HasColumnName("id_client")
             .IsRequired();
-        builder.HasQueryFilter(x => x.Client.Status != ClientStatus.Deleted);
+        builder.HasQueryFilter(x => x.Client.Status != ClientStatus.Deleted &&
+            x.Connection.Status != ConnectionStatus.Deleted);
+
         builder.HasOne(x => x.Connection)
             .WithMany(x => x.Notifications)
             .HasForeignKey(x => x.IdConnection)

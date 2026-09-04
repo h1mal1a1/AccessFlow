@@ -11,5 +11,5 @@ public interface IClientRepository
         CancellationToken cancellationToken);
     Task DeleteClientAsync(long id, CancellationToken cancellationToken);
     Task<List<Client>> GetDeletedClientsAsync(CancellationToken cancellationToken);
-
+    Task<bool> ExistsAsync(long id, CancellationToken cancellationToken);
 }
