@@ -7,10 +7,11 @@ public interface IConnectionRepository
     Task<List<Connection>> GetConnectionsAsync(int page, int pageSize, CancellationToken cancellationToken);
     Task<List<Connection>> GetConnectionByIdsAsync(IReadOnlyCollection<long> listIds,
         CancellationToken cancellationToken);
+    Task<List<Connection>> GetConnectionsByClientIdAsync(long clientId, CancellationToken cancellationToken);
     Task AddConnectionAsync(Connection connection, CancellationToken cancellationToken);
     Task UpdateConnectionAsync(long id, string idExternal, string name, string connectionString, string subUrl,
         CancellationToken cancellationToken);
     Task DeleteConnectionAsync(long id, CancellationToken cancellationToken);
-    Task<List<Connection>> GetDeletedConnectionsAsync(CancellationToken cancellationToken);
+    Task<List<Connection>> GetDeletedConnectionsAsync(int page, int pageSize, CancellationToken cancellationToken);
 
 }

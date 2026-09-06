@@ -1,4 +1,5 @@
 using AccessFlow.Application.Abstractions;
+using Npgsql;
 using AccessFlow.Infrastructure.Persistence.Data;
 using AccessFlow.Domain.Entities;
 using AccessFlow.Domain.Constants;
@@ -24,10 +25,26 @@ public class ConnectionRepository(AppDbContext dbContext) : IConnectionRepositor
         CancellationToken cancellationToken) =>
             await _dbContext.Connections.Where(connection => listIds.Contains(connection.Id))
                 .ToListAsync(cancellationToken);
-    public async Task AddConnectionAsync(Connection Connection, CancellationToken cancellationToken)
+    public async Task<List<Connection>> GetConnectionsByClientIdAsync(long clientId,
+        CancellationToken cancellationToken) =>
+            await _dbContext.Connections.Where(connection => connection.IdClient == clientId)
+                .ToListAsync(cancellationToken);
+    public async Task AddConnectionAsync(Connection connection, CancellationToken cancellationToken)
     {
-        await _dbContext.Connections.AddAsync(Connection, cancellationToken);
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        await _dbContext.Connections.AddAsync(connection, cancellationToken);
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex)
+            when (ex.InnerException is PostgresException
+            {
+                SqlState: PostgresErrorCodes.UniqueViolation
+            })
+        {
+            throw new ConnectionConflictException(
+                "Connection with the same IdExternal, Name or SubUrl already exists.");
+        }
     }
     public async Task UpdateConnectionAsync(long id, string idExternal, string name, string connectionString,
         string subUrl, CancellationToken cancellationToken)
@@ -39,19 +56,35 @@ public class ConnectionRepository(AppDbContext dbContext) : IConnectionRepositor
         connection.ConnectionString = connectionString;
         connection.SubUrl = subUrl;
         connection.UpdatedAt = DateTimeOffset.UtcNow;
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        try
+        {
+            await _dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex)
+            when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
+        {
+            throw new ConnectionConflictException(
+                "Connection with the same IdExternal, Name or SubUrl already exists.");
+        }
     }
     public async Task DeleteConnectionAsync(long id, CancellationToken cancellationToken)
     {
-        Connection client = await _dbContext.Connections.FirstOrDefaultAsync(x => x.Id == id, cancellationToken) ??
+        Connection connection = await _dbContext.Connections.FirstOrDefaultAsync(x => x.Id == id, cancellationToken) ??
             throw new ConnectionNotFoundException(id);
-        client.Status = ConnectionStatus.Deleted;
-        client.UpdatedAt = DateTimeOffset.UtcNow;
+        connection.Status = ConnectionStatus.Deleted;
+        connection.UpdatedAt = DateTimeOffset.UtcNow;
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
-    public async Task<List<Connection>> GetDeletedConnectionsAsync(CancellationToken cancellationToken) =>
-        await _dbContext.Connections
+    public async Task<List<Connection>> GetDeletedConnectionsAsync(int page, int pageSize,
+        CancellationToken cancellationToken)
+    {
+        return await _dbContext.Connections
             .IgnoreQueryFilters()
             .Where(x => x.Status == ConnectionStatus.Deleted)
+            .OrderBy(x => x.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
             .ToListAsync(cancellationToken);
+    }
+
 }

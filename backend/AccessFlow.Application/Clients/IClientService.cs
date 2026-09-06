@@ -9,5 +9,5 @@ public interface IClientService
     Task<List<ClientDto>> GetClientsAsync(int page, int pageSize, CancellationToken cancellationToken);
     Task UpdateClientAsync(long id, UpdateClientDto updateClientDto, CancellationToken cancellationToken);
     Task DeleteClientAsync(long id, CancellationToken cancellationToken);
-    Task<List<ClientDto>> GetDeletedClientsAsync(CancellationToken cancellationToken);
+    Task<List<ClientDto>> GetDeletedClientsAsync(int page, int pageSize, CancellationToken cancellationToken);
 }

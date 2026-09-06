@@ -13,13 +13,32 @@ public class ClientRepository(AppDbContext dbContext) : IClientRepository
     public async Task<Client> GetClientAsync(long id, CancellationToken cancellationToken) =>
         await _dbContext.Clients.FirstOrDefaultAsync(x => x.Id == id, cancellationToken) ??
             throw new ClientNotFoundException(id);
+
+    /// <summary>
+    /// Получает клиента по идентификатору с блокировкой строки FOR UPDATE. Значение id передаётся через 
+    /// FromSqlInterpolated и параметризуется, поэтому не подставляется напрямую в SQL и не создаёт SQL injection.
+    /// Метод должен вызываться внутри открытой транзакции.
+    /// </summary>
+    /// <param name="id">Идентификатор клиента.</param>
+    /// <param name="cancellationToken">Токен отмены операции.</param>
+    /// <returns>Клиент с указанным идентификатором.</returns>
+    /// <exception cref="ClientNotFoundException">
+    /// Выбрасывается, если клиент с указанным id не найден.
+    /// </exception>
+    public async Task<Client> GetClientForUpdateAsync(long id, CancellationToken cancellationToken)
+    {
+        return await _dbContext.Clients
+            .FromSqlInterpolated($"SELECT * FROM clients WHERE id = {id} FOR UPDATE")
+            .FirstOrDefaultAsync(cancellationToken) ??
+            throw new ClientNotFoundException(id);
+    }
     public async Task<List<Client>> GetClientsByIdsAsync(IReadOnlyCollection<long> listIds,
         CancellationToken cancellationToken) =>
             await _dbContext.Clients.Where(cli => listIds.Contains(cli.Id))
                 .ToListAsync(cancellationToken);
 
-    public async Task<List<Client>> GetClientsAsync(int page, int pageSize, CancellationToken cancellationToken)
-        => await _dbContext.Clients
+    public async Task<List<Client>> GetClientsAsync(int page, int pageSize, CancellationToken cancellationToken) =>
+        await _dbContext.Clients
             .OrderBy(x => x.Id)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
@@ -40,29 +59,14 @@ public class ClientRepository(AppDbContext dbContext) : IClientRepository
         client.UpdatedAt = DateTimeOffset.UtcNow;
         await _dbContext.SaveChangesAsync(cancellationToken);
     }
-
-    public async Task DeleteClientAsync(long id, CancellationToken cancellationToken)
+    public async Task<List<Client>> GetDeletedClientsAsync(int page, int pageSize, CancellationToken cancellationToken)
     {
-        Client client = await _dbContext.Clients
-            .Include(x => x.Connections)
-            .FirstOrDefaultAsync(x => x.Id == id, cancellationToken) ??
-            throw new ClientNotFoundException(id);
-        var now = DateTimeOffset.UtcNow;
-        foreach (var connection in client.Connections)
-        {
-            connection.Status = ConnectionStatus.Deleted;
-            connection.UpdatedAt = now;
-        }
-        client.Status = ClientStatus.Deleted;
-        client.UpdatedAt = now;
-        await _dbContext.SaveChangesAsync(cancellationToken);
+        return await _dbContext.Clients
+            .IgnoreQueryFilters()
+            .Where(x => x.Status == ClientStatus.Deleted)
+            .OrderBy(x => x.Id)
+            .Skip((page - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync(cancellationToken);
     }
-    public async Task<List<Client>> GetDeletedClientsAsync(CancellationToken cancellationToken) =>
-        await _dbContext.Clients
-                .IgnoreQueryFilters()
-                .Where(x => x.Status == ClientStatus.Deleted)
-                .ToListAsync(cancellationToken);
-
-    public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken) =>
-        await _dbContext.Clients.AnyAsync(client => client.Id == id, cancellationToken);
 }

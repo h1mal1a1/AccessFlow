@@ -18,8 +18,9 @@ public class ConnectionsController(IConnectionService connectionService, IOption
     [HttpGet("{id:long}")]
     public async Task<ConnectionDto> GetConnectionById(long id, CancellationToken cancellationToken)
         => await _connectionService.GetConnectionAsync(id, cancellationToken);
+
     [HttpGet]
-    public async Task<List<ConnectionDto>> GetConnections(int page = 1, int? pageSize = null,
+    public async Task<List<ConnectionListDto>> GetConnections(int page = 1, int? pageSize = null,
         CancellationToken cancellationToken = default)
     {
         var actualPageSize = pageSize ?? _paginationOptions.DefaultPageSize;
@@ -49,13 +50,16 @@ public class ConnectionsController(IConnectionService connectionService, IOption
         var id = await _connectionService.CreateConnectionAsync(connectionDto, cancellationToken);
         return CreatedAtAction(nameof(GetConnectionById), new { id }, id);
     }
+
     [HttpDelete("{id:long}")]
-    public async Task DeleteConnection(long id, CancellationToken cancellationToken)
+    public async Task<IActionResult> DeleteConnection(long id, CancellationToken cancellationToken)
     {
         await _connectionService.DeleteConnectionAsync(id, cancellationToken);
+        return NoContent();
     }
+
     [HttpPut("{id:long}")]
-    public async Task UpdateConnection(long id, UpdateConnectionRequest request,
+    public async Task<IActionResult> UpdateConnection(long id, UpdateConnectionRequest request,
         CancellationToken cancellationToken)
     {
         UpdateConnectionDto updateConnectionDto = new()
@@ -66,9 +70,21 @@ public class ConnectionsController(IConnectionService connectionService, IOption
             SubUrl = request.SubUrl
         };
         await _connectionService.UpdateConnectionAsync(id, updateConnectionDto, cancellationToken);
+        return NoContent();
     }
 
     [HttpGet("deleted")]
-    public async Task<List<ConnectionDto>> GetDeletedConnectionsAsync(CancellationToken cancellationToken) =>
-        await _connectionService.GetDeletedConnectionsAsync(cancellationToken);
+    public async Task<List<ConnectionListDto>> GetDeletedConnections(int page = 1, int? pageSize = null,
+        CancellationToken cancellationToken = default)
+    {
+        var actualPageSize = pageSize ?? _paginationOptions.DefaultPageSize;
+        if (page < 1)
+            page = 1;
+
+        if (actualPageSize > _paginationOptions.MaxPageSize)
+            actualPageSize = _paginationOptions.MaxPageSize;
+        if (actualPageSize < 1)
+            actualPageSize = _paginationOptions.DefaultPageSize;
+        return await _connectionService.GetDeletedConnectionsAsync(page, actualPageSize, cancellationToken);
+    }
 }

@@ -37,7 +37,8 @@ public class ClientsController(IClientService clientService, IOptions<Pagination
     }
 
     [HttpPost]
-    public async Task<ActionResult<long>> CreateClient(CreateClientRequest request, CancellationToken cancellationToken)
+    public async Task<ActionResult<long>> CreateClient(CreateClientRequest request,
+        CancellationToken cancellationToken)
     {
         CreateClientDto clientDto = new()
         {
@@ -48,13 +49,17 @@ public class ClientsController(IClientService clientService, IOptions<Pagination
         var id = await _clientService.CreateClientAsync(clientDto, cancellationToken);
         return CreatedAtAction(nameof(GetClientById), new { id }, id);
     }
+
     [HttpDelete("{id:long}")]
-    public async Task DeleteClient(long id, CancellationToken cancellationToken)
+    public async Task<IActionResult> DeleteClient(long id, CancellationToken cancellationToken)
     {
         await _clientService.DeleteClientAsync(id, cancellationToken);
+        return NoContent();
     }
+
     [HttpPut("{id:long}")]
-    public async Task UpdateClient(long id, UpdateClientRequest updateClientRequest, CancellationToken cancellationToken)
+    public async Task<IActionResult> UpdateClient(long id, UpdateClientRequest updateClientRequest,
+        CancellationToken cancellationToken)
     {
         UpdateClientDto updateClientDto = new()
         {
@@ -63,9 +68,22 @@ public class ClientsController(IClientService clientService, IOptions<Pagination
             Comment = updateClientRequest.Comment,
         };
         await _clientService.UpdateClientAsync(id, updateClientDto, cancellationToken);
+        return NoContent();
     }
 
     [HttpGet("deleted")]
-    public async Task<List<ClientDto>> GetDeletedClientsAsync(CancellationToken cancellationToken) =>
-        await _clientService.GetDeletedClientsAsync(cancellationToken);
+    public async Task<List<ClientDto>> GetDeletedClients(int page = 1, int? pageSize = null,
+        CancellationToken cancellationToken = default)
+    {
+        var actualPageSize = pageSize ?? _paginationOptions.DefaultPageSize;
+        if (page < 1)
+            page = 1;
+
+        if (actualPageSize > _paginationOptions.MaxPageSize)
+            actualPageSize = _paginationOptions.MaxPageSize;
+        if (actualPageSize < 1)
+            actualPageSize = _paginationOptions.DefaultPageSize;
+        return await _clientService.GetDeletedClientsAsync(page, actualPageSize, cancellationToken);
+    }
+
 }

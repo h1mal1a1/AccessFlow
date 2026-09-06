@@ -10,12 +10,26 @@ public class GlobalExceptionHandler : IExceptionHandler
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception,
         CancellationToken cancellationToken)
     {
-        if (exception is not ClientNotFoundException && exception is not ConnectionNotFoundException)
-            return false;
+        if (exception is ConnectionConflictException)
+        {
+            httpContext.Response.StatusCode = StatusCodes.Status409Conflict;
+            await httpContext.Response.WriteAsJsonAsync(
+                new ProblemDetails
+                {
+                    Status = StatusCodes.Status409Conflict,
+                    Title = "Connection conflict",
+                    Detail = exception.Message
+                },
+                cancellationToken
+            );
+            return true;
+        }
 
-        httpContext.Response.StatusCode = StatusCodes.Status404NotFound;
+        if (exception is ClientNotFoundException or ConnectionNotFoundException)
+        {
+            httpContext.Response.StatusCode = StatusCodes.Status404NotFound;
 
-        await httpContext.Response.WriteAsJsonAsync(
+            await httpContext.Response.WriteAsJsonAsync(
             new ProblemDetails
             {
                 Status = StatusCodes.Status404NotFound,
@@ -24,6 +38,8 @@ public class GlobalExceptionHandler : IExceptionHandler
             },
             cancellationToken);
 
-        return true;
+            return true;
+        }
+        return false;
     }
 }

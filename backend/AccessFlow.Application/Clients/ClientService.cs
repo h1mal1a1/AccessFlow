@@ -4,9 +4,16 @@ using AccessFlow.Domain.Entities;
 using AccessFlow.Domain.Constants;
 namespace AccessFlow.Application.Clients;
 
-public class ClientService(IClientRepository repository) : IClientService
+public class ClientService(
+    IClientRepository repository,
+    ITransactionManager transactionManager,
+    IConnectionRepository connectionRepository,
+    IUnitOfWork unitOfWork) : IClientService
 {
     private readonly IClientRepository _clientRepository = repository;
+    private readonly ITransactionManager _transactionManager = transactionManager;
+    private readonly IConnectionRepository _connectionRepository = connectionRepository;
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
     public async Task<long> CreateClientAsync(CreateClientDto createClientDto, CancellationToken cancellationToken)
     {
         var now = DateTimeOffset.UtcNow;
@@ -56,11 +63,25 @@ public class ClientService(IClientRepository repository) : IClientService
     }
     public async Task DeleteClientAsync(long id, CancellationToken cancellationToken)
     {
-        await _clientRepository.DeleteClientAsync(id, cancellationToken);
+        await _transactionManager.ExecuteInTransactionAsync(async ct =>
+        {
+            var client = await _clientRepository.GetClientForUpdateAsync(id, ct);
+            var connections = await _connectionRepository.GetConnectionsByClientIdAsync(client.Id, ct);
+            var now = DateTimeOffset.UtcNow;
+            foreach (var connection in connections)
+            {
+                connection.Status = ConnectionStatus.Deleted;
+                connection.UpdatedAt = now;
+            }
+            client.Status = ClientStatus.Deleted;
+            client.UpdatedAt = now;
+            await _unitOfWork.SaveChangesAsync(ct);
+        }, cancellationToken);
     }
-    public async Task<List<ClientDto>> GetDeletedClientsAsync(CancellationToken cancellationToken)
+    public async Task<List<ClientDto>> GetDeletedClientsAsync(int page, int pageSize,
+        CancellationToken cancellationToken)
     {
-        var clients = await _clientRepository.GetDeletedClientsAsync(cancellationToken);
+        var clients = await _clientRepository.GetDeletedClientsAsync(page, pageSize, cancellationToken);
         return [.. clients.Select(client =>
             new ClientDto()
             {
@@ -72,6 +93,4 @@ public class ClientService(IClientRepository repository) : IClientService
             }
         )];
     }
-    public async Task<bool> ExistsAsync(long id, CancellationToken cancellationToken) =>
-        await _clientRepository.ExistsAsync(id, cancellationToken);
 }
