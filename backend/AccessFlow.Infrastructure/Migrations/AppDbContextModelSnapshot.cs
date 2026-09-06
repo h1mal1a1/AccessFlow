@@ -125,6 +125,11 @@ namespace AccessFlow.Infrastructure.Migrations
                         .HasColumnType("text")
                         .HasColumnName("phone_number");
 
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
@@ -132,12 +137,10 @@ namespace AccessFlow.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
-                        .IsUnique()
-                        .HasDatabaseName("ux_clients_email");
+                        .HasDatabaseName("ix_clients_email");
 
                     b.HasIndex("PhoneNumber")
-                        .IsUnique()
-                        .HasDatabaseName("ux_clients_phone_number");
+                        .HasDatabaseName("ix_clients_phone_number");
 
                     b.ToTable("clients", (string)null);
                 });
@@ -194,15 +197,18 @@ namespace AccessFlow.Infrastructure.Migrations
 
                     b.HasIndex("IdExternal")
                         .IsUnique()
-                        .HasDatabaseName("ux_connections_id_external");
+                        .HasDatabaseName("ux_connections_id_external")
+                        .HasFilter("\"status\" <> 'Deleted'");
 
                     b.HasIndex("Name")
                         .IsUnique()
-                        .HasDatabaseName("ux_connections_name");
+                        .HasDatabaseName("ux_connections_name")
+                        .HasFilter("\"status\" <> 'Deleted'");
 
                     b.HasIndex("SubUrl")
                         .IsUnique()
-                        .HasDatabaseName("ux_connections_sub_url");
+                        .HasDatabaseName("ux_connections_sub_url")
+                        .HasFilter("\"status\" <> 'Deleted'");
 
                     b.ToTable("connections", (string)null);
                 });

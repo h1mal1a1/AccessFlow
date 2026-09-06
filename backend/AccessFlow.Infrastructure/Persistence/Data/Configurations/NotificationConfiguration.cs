@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using AccessFlow.Domain.Entities;
+using AccessFlow.Domain.Constants;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
 namespace AccessFlow.Infrastructure.Persistence.Data.Configurations;
@@ -22,6 +23,8 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
         builder.Property(x => x.IdClient)
             .HasColumnName("id_client")
             .IsRequired();
+        builder.HasQueryFilter(x => x.Client.Status != ClientStatus.Deleted &&
+            x.Connection.Status != ConnectionStatus.Deleted);
 
         builder.HasOne(x => x.Connection)
             .WithMany(x => x.Notifications)

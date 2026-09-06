@@ -7,7 +7,7 @@ services:
     ports:
       - "8080:8080"
     env_file:
-      - .env.backend
+      - ./env/.env.backend
     depends_on:
       migrator:
         condition: service_completed_successfully
@@ -21,7 +21,7 @@ services:
       target: migrator
     container_name: access-flow-migrator
     env_file:
-      - .env.backend
+      - ./env/.env.backend
     entrypoint:
       - /bin/sh
       - -c
@@ -36,11 +36,11 @@ services:
     image: postgres:18
     container_name: access-flow-pg
     env_file:
-      - .env.db
+      - ./env/.env.db
     volumes:
       - ./pg/data:/var/lib/postgresql
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres -d access_flow_db" ]
+      test: [ "CMD-SHELL", "pg_isready -h 127.0.0.1 -U postgres -d access_flow_db" ]
       interval: 5s
       timeout: 5s
       retries: 10

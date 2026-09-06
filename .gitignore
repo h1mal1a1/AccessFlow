@@ -5,11 +5,13 @@
 .vs/
 *.user
 *.suo
+
 planForMe.txt
-.env
-.env.*
-!.env.example
-!.env.backend.example
-!.env.db.example
+
+env/.env.backend
+env/.env.db
+
+!env/.env.backend.example
+!env/.env.db.example
 
 pg/data/
