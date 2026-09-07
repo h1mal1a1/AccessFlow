@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AccessFlow.Domain", "Access
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AccessFlow.Infrastructure", "AccessFlow.Infrastructure\AccessFlow.Infrastructure.csproj", "{5D7B1BF0-6BA4-4035-8708-CFD96E639CD6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AccessFlow.IntegrationTests", "..\tests\AccessFlow.IntegrationTests\AccessFlow.IntegrationTests.csproj", "{55208223-52CE-47BC-BDAA-6C65F3C0B1B9}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +38,9 @@ Global
 		{5D7B1BF0-6BA4-4035-8708-CFD96E639CD6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5D7B1BF0-6BA4-4035-8708-CFD96E639CD6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5D7B1BF0-6BA4-4035-8708-CFD96E639CD6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{55208223-52CE-47BC-BDAA-6C65F3C0B1B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{55208223-52CE-47BC-BDAA-6C65F3C0B1B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{55208223-52CE-47BC-BDAA-6C65F3C0B1B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{55208223-52CE-47BC-BDAA-6C65F3C0B1B9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
