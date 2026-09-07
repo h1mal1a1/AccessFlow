@@ -12,21 +12,21 @@ namespace AccessFlow.IntegrationTests.Connections;
 public class ConnectionTests : IClassFixture<IntegrationTestFactory>
 {
     private readonly HttpClient _client;
-    private readonly ClientTestHelper _clientTestsHelper;
+    private readonly ClientTestHelper _clientHelper;
     private readonly ConnectionTestHelper _connectionHelper;
 
     private static string RndStr() => Guid.NewGuid().ToString("N");
     public ConnectionTests(IntegrationTestFactory factory)
     {
         _client = factory.CreateClient();
-        _clientTestsHelper = new ClientTestHelper(_client);
+        _clientHelper = new ClientTestHelper(_client);
         _connectionHelper = new ConnectionTestHelper(_client);
     }
 
     [Fact]
     public async Task CreateConnection_WithValidData_ReturnsCreated()
     {
-        var id = await _clientTestsHelper.CreateClientAsync();
+        var id = await _clientHelper.CreateClientAsync();
         await _connectionHelper.CreateConnectionAsync(id, RndStr(), RndStr(), RndStr(), RndStr());
     }
 
@@ -37,7 +37,7 @@ public class ConnectionTests : IClassFixture<IntegrationTestFactory>
     [Fact]
     public async Task CreateConnection_WithValidData_ReturnsCreatedWithIdAndLocation()
     {
-        var id = await _clientTestsHelper.CreateClientAsync();
+        var id = await _clientHelper.CreateClientAsync();
         var idConnection = await _connectionHelper.CreateConnectionAsync(id, RndStr(), RndStr(), RndStr(), RndStr());
         Assert.True(idConnection > 0);
     }
@@ -49,7 +49,7 @@ public class ConnectionTests : IClassFixture<IntegrationTestFactory>
     [Fact]
     public async Task GetConnection_AfterCreated_ReturnsCorrectDataAndActiveStatus()
     {
-        var idClient = await _clientTestsHelper.CreateClientAsync();
+        var idClient = await _clientHelper.CreateClientAsync();
         string connectionString = RndStr();
         string idExternal = RndStr();
         string name = RndStr();
@@ -90,8 +90,8 @@ public class ConnectionTests : IClassFixture<IntegrationTestFactory>
     [Fact]
     public async Task CreateConnection_WhenClientIsDeleted_ReturnsNotFound()
     {
-        var idClient = await _clientTestsHelper.CreateClientAsync();
-        await _clientTestsHelper.DeleteClientAsync(idClient);
+        var idClient = await _clientHelper.CreateClientAsync();
+        await _clientHelper.DeleteClientAsync(idClient);
         CreateConnectionDto createConnectionDto = new()
         {
             ConnectionString = RndStr(),
@@ -122,7 +122,7 @@ public class ConnectionTests : IClassFixture<IntegrationTestFactory>
     [Fact]
     public async Task UpdateConnection_WhenConnectionExists_ReturnsNoContentAndUpdatesData()
     {
-        var idClient = await _clientTestsHelper.CreateClientAsync();
+        var idClient = await _clientHelper.CreateClientAsync();
         var idConnection = await _connectionHelper.CreateConnectionAsync(
             idClient, RndStr(), RndStr(), RndStr(), RndStr());
         UpdateConnectionDto updateConnectionDto = new()
@@ -165,7 +165,7 @@ public class ConnectionTests : IClassFixture<IntegrationTestFactory>
     [Fact]
     public async Task UpdateConnection_WhenConnectionIsDeleted_ReturnsNotFound()
     {
-        var idClient = await _clientTestsHelper.CreateClientAsync();
+        var idClient = await _clientHelper.CreateClientAsync();
         var idConnection = await _connectionHelper.CreateConnectionAsync(
             idClient, RndStr(), RndStr(), RndStr(), RndStr());
         await _connectionHelper.DeleteConnection(idConnection);
@@ -187,7 +187,7 @@ public class ConnectionTests : IClassFixture<IntegrationTestFactory>
     [Fact]
     public async Task DeleteConnection_WhenConnectionExists_ReturnsNoContentAndBecomesUnavailable()
     {
-        var idClient = await _clientTestsHelper.CreateClientAsync();
+        var idClient = await _clientHelper.CreateClientAsync();
         var idConnection = await _connectionHelper.CreateConnectionAsync(
             idClient, RndStr(), RndStr(), RndStr(), RndStr());
         await _connectionHelper.DeleteConnection(idConnection);
@@ -214,7 +214,7 @@ public class ConnectionTests : IClassFixture<IntegrationTestFactory>
     [Fact]
     public async Task GetDeletedConnections_AfterConnectionDeleted_ContainsDeletedConnection()
     {
-        var idClient = await _clientTestsHelper.CreateClientAsync();
+        var idClient = await _clientHelper.CreateClientAsync();
         var idConnection = await _connectionHelper.CreateConnectionAsync(
             idClient, RndStr(), RndStr(), RndStr(), RndStr());
         await _connectionHelper.DeleteConnection(idConnection);
@@ -234,7 +234,7 @@ public class ConnectionTests : IClassFixture<IntegrationTestFactory>
     [InlineData("SubUrl")]
     public async Task CreateConnection_WithDuplicateUniqueField_ReturnsConflict(string field)
     {
-        var idClient = await _clientTestsHelper.CreateClientAsync();
+        var idClient = await _clientHelper.CreateClientAsync();
         var connectionString = RndStr();
         var idExternal = RndStr();
         var name = RndStr();
@@ -262,7 +262,7 @@ public class ConnectionTests : IClassFixture<IntegrationTestFactory>
     [InlineData("SubUrl")]
     public async Task UpdateConnection_WithDuplicateUniqueField_ReturnsConflict(string field)
     {
-        var idClient = await _clientTestsHelper.CreateClientAsync();
+        var idClient = await _clientHelper.CreateClientAsync();
         var idConn1 = await _connectionHelper.CreateConnectionAsync(idClient, RndStr(), RndStr(), RndStr(), RndStr());
         var idConn2 = await _connectionHelper.CreateConnectionAsync(idClient, RndStr(), RndStr(), RndStr(), RndStr());
 
@@ -288,7 +288,7 @@ public class ConnectionTests : IClassFixture<IntegrationTestFactory>
     [InlineData("SubUrl")]
     public async Task CreateConnection_WithSameUniqueFieldAfterSoftDelete_ReturnsCreated(string field)
     {
-        var idClient = await _clientTestsHelper.CreateClientAsync();
+        var idClient = await _clientHelper.CreateClientAsync();
         var connectionString = RndStr();
         var idExternal = RndStr();
         var name = RndStr();
@@ -316,7 +316,7 @@ public class ConnectionTests : IClassFixture<IntegrationTestFactory>
     [Fact]
     public async Task GetConnections_ReturnsOnlyActiveConnections()
     {
-        var idClient = await _clientTestsHelper.CreateClientAsync();
+        var idClient = await _clientHelper.CreateClientAsync();
         var idCon1 = await _connectionHelper.CreateConnectionAsync(idClient, RndStr(), RndStr(), RndStr(), RndStr());
         var idCon2 = await _connectionHelper.CreateConnectionAsync(idClient, RndStr(), RndStr(), RndStr(), RndStr());
         await _connectionHelper.DeleteConnection(idCon2);
@@ -334,7 +334,7 @@ public class ConnectionTests : IClassFixture<IntegrationTestFactory>
     [Fact]
     public async Task GetConnections_WithPagination_ReturnsCorrectPages()
     {
-        var idClient = await _clientTestsHelper.CreateClientAsync();
+        var idClient = await _clientHelper.CreateClientAsync();
         for (int i = 0; i < 6; i++)
             await _connectionHelper.CreateConnectionAsync(idClient, RndStr(), RndStr(), RndStr(), RndStr());
         var listConnectionsFromPage1 = await _connectionHelper.GetActiveConnectionsAsync(1, 2);
@@ -360,7 +360,7 @@ public class ConnectionTests : IClassFixture<IntegrationTestFactory>
     [Fact]
     public async Task GetConnectionLists_DoNotExposeSensitiveData_ButGetByIdDoes()
     {
-        var idClient = await _clientTestsHelper.CreateClientAsync();
+        var idClient = await _clientHelper.CreateClientAsync();
 
         var connectionString = RndStr();
         var subUrl = RndStr();
