@@ -49,4 +49,56 @@ public class ThreeXUiClient(ThreeXUiHelper helper) : IVpsClient
             throw new VpsException(VpsErrorType.InvalidResponse,
                 $"3X-UI client '{name}' was created, but could not be retrieved.");
     }
+
+    public async Task DeleteConnectionAsync(string name, CancellationToken cancellationToken)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"panel/api/clients/del/{name}");
+
+        using var resp = await _helper.SendAsync(request, cancellationToken);
+
+        _helper.EnsureSuccessResponse(resp);
+
+        var result = await _helper.ReadResponseAsync<object>(resp, cancellationToken);
+
+        if (!result.Success && result.Msg.Contains("not found", StringComparison.OrdinalIgnoreCase))
+            throw new VpsException(VpsErrorType.NotFound, $"3X-UI client '{name}' was not found.");
+
+        if (!result.Success)
+            throw new VpsException(VpsErrorType.OperationFailed,
+                $"3X-UI failed to delete client '{name}': {result.Msg}");
+    }
+
+    public async Task<VpsConnectionInfo> UpdateConnectionAsync(string currentName, string newName,
+        CancellationToken cancellationToken)
+    {
+        var body = new ThreeXUiUpdateClientDto
+        {
+            Email = newName
+        };
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"panel/api/clients/update/{currentName}")
+        {
+            Content = JsonContent.Create(body)
+        };
+
+        using var resp = await _helper.SendAsync(request, cancellationToken);
+
+        _helper.EnsureSuccessResponse(resp);
+
+        var result = await _helper.ReadResponseAsync<object>(resp, cancellationToken);
+
+        if (!result.Success && result.Msg.Contains("record not found", StringComparison.OrdinalIgnoreCase))
+            throw new VpsException(VpsErrorType.NotFound, $"3X-UI client '{currentName}' was not found.");
+
+        if (!result.Success && result.Msg.Contains("Duplicate email", StringComparison.OrdinalIgnoreCase))
+            throw new VpsException(VpsErrorType.Conflict, $"3X-UI client '{newName}' already exists.");
+
+        if (!result.Success)
+            throw new VpsException(VpsErrorType.OperationFailed,
+                $"3X-UI failed to update client '{currentName}': {result.Msg}");
+
+        return await GetConnectionAsync(newName, cancellationToken) ??
+            throw new VpsException(VpsErrorType.InvalidResponse,
+                $"3X-UI client '{currentName}' was updated, but could not be retrieved.");
+    }
 }
