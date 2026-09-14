@@ -1,5 +1,6 @@
 using AccessFlow.Application.Clients.Exceptions;
 using AccessFlow.Application.Connections.Exceptions;
+using AccessFlow.Application.VPS.Exceptions;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 
@@ -40,6 +41,34 @@ public class GlobalExceptionHandler : IExceptionHandler
 
             return true;
         }
+
+        if (exception is VpsException vpsException)
+        {
+            var statusCode = vpsException.ErrorType switch
+            {
+                VpsErrorType.Conflict => StatusCodes.Status409Conflict,
+                VpsErrorType.NotFound => StatusCodes.Status404NotFound,
+                VpsErrorType.InvalidResponse => StatusCodes.Status502BadGateway,
+                VpsErrorType.OperationFailed => StatusCodes.Status502BadGateway,
+                VpsErrorType.Unavailable => StatusCodes.Status503ServiceUnavailable,
+                VpsErrorType.Configuration => StatusCodes.Status502BadGateway,
+                _ => StatusCodes.Status500InternalServerError
+            };
+
+            httpContext.Response.StatusCode = statusCode;
+
+            await httpContext.Response.WriteAsJsonAsync(
+                new ProblemDetails
+                {
+                    Status = statusCode,
+                    Title = "VPS error",
+                    Detail = vpsException.Message
+                },
+                cancellationToken);
+
+            return true;
+        }
+
         return false;
     }
 }

@@ -6,6 +6,9 @@ using AccessFlow.Infrastructure.Persistence.Transactions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using AccessFlow.Infrastructure.Vps;
+using System.Net.Http.Headers;
+using Microsoft.Extensions.Options;
 
 namespace AccessFlow.Infrastructure;
 
@@ -21,6 +24,16 @@ public static class DependencyInjection
         services.AddScoped<IConnectionRepository, ConnectionRepository>();
         services.AddScoped<ITransactionManager, EFTransactionManager>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.Configure<VpsOptions>(configuration.GetSection("Vps"));
+        services.AddHttpClient<ThreeXUiHelper>((serviceProvider, client) =>
+        {
+            var options = serviceProvider.GetRequiredService<IOptions<VpsOptions>>().Value;
+
+            client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", options.ApiToken);
+        });
+        services.AddTransient<IVpsClient, ThreeXUiClient>();
         return services;
     }
 }
