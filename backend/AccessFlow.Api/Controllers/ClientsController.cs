@@ -40,12 +40,7 @@ public class ClientsController(IClientService clientService, IOptions<Pagination
     public async Task<ActionResult<long>> CreateClient(CreateClientRequest request,
         CancellationToken cancellationToken)
     {
-        CreateClientDto clientDto = new()
-        {
-            Email = request.Email,
-            PhoneNumber = request.PhoneNumber,
-            Comment = request.Comment
-        };
+        var clientDto = new CreateClientDto(request.Email, request.PhoneNumber, request.Comment);
         var id = await _clientService.CreateClientAsync(clientDto, cancellationToken);
         return CreatedAtAction(nameof(GetClientById), new { id }, id);
     }
@@ -58,16 +53,10 @@ public class ClientsController(IClientService clientService, IOptions<Pagination
     }
 
     [HttpPut("{id:long}")]
-    public async Task<IActionResult> UpdateClient(long id, UpdateClientRequest updateClientRequest,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> UpdateClient(long id, UpdateClientRequest updateCliReq, CancellationToken ct)
     {
-        UpdateClientDto updateClientDto = new()
-        {
-            Email = updateClientRequest.Email,
-            PhoneNumber = updateClientRequest.PhoneNumber,
-            Comment = updateClientRequest.Comment,
-        };
-        await _clientService.UpdateClientAsync(id, updateClientDto, cancellationToken);
+        var updateClientDto = new UpdateClientDto(updateCliReq.Email, updateCliReq.PhoneNumber, updateCliReq.Comment);
+        await _clientService.UpdateClientAsync(id, updateClientDto, ct);
         return NoContent();
     }
 

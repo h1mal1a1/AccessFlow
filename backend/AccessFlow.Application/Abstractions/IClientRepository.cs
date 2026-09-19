@@ -8,7 +8,6 @@ public interface IClientRepository
     Task<List<Client>> GetClientsAsync(int page, int pageSize, CancellationToken cancellationToken);
     Task<List<Client>> GetClientsByIdsAsync(IReadOnlyCollection<long> listIds, CancellationToken cancellationToken);
     Task AddClientAsync(Client client, CancellationToken cancellationToken);
-    Task UpdateClientAsync(long id, string email, string phoneNumber, string? comment,
-        CancellationToken cancellationToken);
+    Task UpdateClientAsync(long id, string email, string phoneNumber, string? comment, CancellationToken ct);
     Task<List<Client>> GetDeletedClientsAsync(int page, int pageSize, CancellationToken cancellationToken);
 }

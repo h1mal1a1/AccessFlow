@@ -46,32 +46,11 @@ public class ConnectionRepository(AppDbContext dbContext) : IConnectionRepositor
                 "Connection with the same IdExternal, Name or SubUrl already exists.");
         }
     }
-    public async Task UpdateConnectionAsync(long id, string idExternal, string name, string connectionString,
-        string subUrl, CancellationToken cancellationToken)
+    public async Task MarkDeletingAsync(long id, CancellationToken cancellationToken)
     {
         Connection connection = await _dbContext.Connections.FirstOrDefaultAsync(x => x.Id == id, cancellationToken) ??
             throw new ConnectionNotFoundException(id);
-        connection.Name = name;
-        connection.IdExternal = idExternal;
-        connection.ConnectionString = connectionString;
-        connection.SubUrl = subUrl;
-        connection.UpdatedAt = DateTimeOffset.UtcNow;
-        try
-        {
-            await _dbContext.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateException ex)
-            when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
-        {
-            throw new ConnectionConflictException(
-                "Connection with the same IdExternal, Name or SubUrl already exists.");
-        }
-    }
-    public async Task DeleteConnectionAsync(long id, CancellationToken cancellationToken)
-    {
-        Connection connection = await _dbContext.Connections.FirstOrDefaultAsync(x => x.Id == id, cancellationToken) ??
-            throw new ConnectionNotFoundException(id);
-        connection.Status = ConnectionStatus.Deleted;
+        connection.Status = ConnectionStatus.Deleting;
         connection.UpdatedAt = DateTimeOffset.UtcNow;
         await _dbContext.SaveChangesAsync(cancellationToken);
     }

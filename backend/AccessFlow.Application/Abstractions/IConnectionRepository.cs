@@ -9,9 +9,7 @@ public interface IConnectionRepository
         CancellationToken cancellationToken);
     Task<List<Connection>> GetConnectionsByClientIdAsync(long clientId, CancellationToken cancellationToken);
     Task AddConnectionAsync(Connection connection, CancellationToken cancellationToken);
-    Task UpdateConnectionAsync(long id, string idExternal, string name, string connectionString, string subUrl,
-        CancellationToken cancellationToken);
-    Task DeleteConnectionAsync(long id, CancellationToken cancellationToken);
+    Task MarkDeletingAsync(long id, CancellationToken cancellationToken);
     Task<List<Connection>> GetDeletedConnectionsAsync(int page, int pageSize, CancellationToken cancellationToken);
 
 }
