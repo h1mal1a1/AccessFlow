@@ -83,16 +83,7 @@ public class ClientTestHelper(HttpClient client)
         return clients;
     }
 
-    public static UpdateClientDto CreateUpdateDto()
-    {
-        return new UpdateClientDto
-        {
-            Email = "newEmail",
-            PhoneNumber = "123",
-            Comment = "temp"
-        };
-    }
-
+    public static UpdateClientDto CreateUpdateDto() => new("newEmail", "123", "temp");
     public async Task<List<ClientDto>> GetActiveClientsAsync()
     {
         var response = await _client.GetAsync("/api/clients?page=1&pageSize=100");
