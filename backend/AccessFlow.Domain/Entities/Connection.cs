@@ -10,10 +10,10 @@ public class Connection
     /// <summary>
     /// Идентификатор подключения во внешней системе/VPS
     /// </summary>
-    public required string IdExternal { get; set; }
+    public string? IdExternal { get; set; }
     public required string Name { get; set; }
-    public required string ConnectionString { get; set; }
-    public required string SubUrl { get; set; }
+    public string? ConnectionString { get; set; }
+    public string? SubUrl { get; set; }
     public required ConnectionStatus Status { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset UpdatedAt { get; set; }

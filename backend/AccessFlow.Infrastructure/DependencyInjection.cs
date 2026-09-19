@@ -24,6 +24,7 @@ public static class DependencyInjection
         services.AddScoped<IConnectionRepository, ConnectionRepository>();
         services.AddScoped<ITransactionManager, EFTransactionManager>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+        services.AddScoped<IOutboxMessageRepository, OutboxMessageRepository>();
         services.Configure<VpsOptions>(configuration.GetSection("Vps"));
         services.AddHttpClient<ThreeXUiHelper>((serviceProvider, client) =>
         {
