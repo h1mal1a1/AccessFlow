@@ -138,18 +138,6 @@ public class ThreeXUiHelper(HttpClient httpClient, IOptions<VpsOptions> options)
         CancellationToken cancellationToken)
     {
         var inboundDto = await GetInboundAsync(cancellationToken);
-        return new ThreeXUiCreateClientRequest()
-        {
-            Client = new ThreeXUiCreateClientDto
-            {
-                Email = name,
-                TotalGB = 0,
-                ExpiryTime = 0,
-                TgId = 0,
-                LimitIp = 0,
-                Enable = true
-            },
-            InboundIds = [inboundDto.Id]
-        };
+        return new ThreeXUiCreateClientRequest(new ThreeXUiCreateClientDto(name, 0, 0, 0, 0, true), [inboundDto.Id]);
     }
 }

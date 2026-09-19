@@ -68,14 +68,10 @@ public class ThreeXUiClient(ThreeXUiHelper helper) : IVpsClient
                 $"3X-UI failed to delete client '{name}': {result.Msg}");
     }
 
-    public async Task<VpsConnectionInfo> UpdateConnectionAsync(string currentName, string newName,
+    public async Task<VpsConnectionInfo> RenameConnectionAsync(string currentName, string newName,
         CancellationToken cancellationToken)
     {
-        var body = new ThreeXUiUpdateClientDto
-        {
-            Email = newName
-        };
-
+        var body = new ThreeXUiUpdateClientDto(newName);
         using var request = new HttpRequestMessage(HttpMethod.Post, $"panel/api/clients/update/{currentName}")
         {
             Content = JsonContent.Create(body)

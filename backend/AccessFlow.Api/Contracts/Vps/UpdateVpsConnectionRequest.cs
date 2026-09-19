@@ -1,6 +1,3 @@
 namespace AccessFlow.Api.Contracts.Vps;
 
-public class UpdateVpsConnectionRequest
-{
-    public required string NewName { get; set; }
-}
+public sealed record UpdateVpsConnectionRequest(string NewName);

@@ -32,7 +32,7 @@ public class VpsConnectionsController(IVpsClient vpsClient) : ControllerBase
     public async Task<ActionResult<VpsConnectionInfo>> Update(string name, UpdateVpsConnectionRequest request,
         CancellationToken cancellationToken)
     {
-        var connection = await vpsClient.UpdateConnectionAsync(name, request.NewName, cancellationToken);
+        var connection = await vpsClient.RenameConnectionAsync(name, request.NewName, cancellationToken);
 
         return Ok(connection);
     }

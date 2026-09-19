@@ -1,6 +1,3 @@
 namespace AccessFlow.Api.Contracts.Vps;
 
-public class CreateVpsConnectionRequest
-{
-    public required string Name { get; set; }
-}
+public sealed record CreateVpsConnectionRequest(string Name);
