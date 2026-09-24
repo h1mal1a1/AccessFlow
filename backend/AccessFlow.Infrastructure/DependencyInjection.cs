@@ -25,13 +25,20 @@ public static class DependencyInjection
         services.AddScoped<ITransactionManager, EFTransactionManager>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
         services.AddScoped<IOutboxMessageRepository, OutboxMessageRepository>();
-        services.Configure<VpsOptions>(configuration.GetSection("Vps"));
+
+        services.AddOptions<VpsOptions>()
+            .Bind(configuration.GetSection("Vps"))
+            .Validate(x => Uri.TryCreate(x.BaseUrl, UriKind.Absolute, out _), "Vps: BaseUrl is invalid.")
+            .Validate(x => !string.IsNullOrWhiteSpace(x.ApiToken), "Vps:ApiToken is required.")
+            .Validate(x => !string.IsNullOrWhiteSpace(x.InboundRemark), "Vps:InboundRemark is required.")
+            .ValidateOnStart();
+
         services.AddHttpClient<ThreeXUiHelper>((serviceProvider, client) =>
         {
             var options = serviceProvider.GetRequiredService<IOptions<VpsOptions>>().Value;
 
             client.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
-
+            client.Timeout = TimeSpan.FromSeconds(10);
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", options.ApiToken);
         });
         services.AddTransient<IVpsClient, ThreeXUiClient>();

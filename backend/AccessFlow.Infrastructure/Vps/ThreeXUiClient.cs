@@ -52,7 +52,8 @@ public class ThreeXUiClient(ThreeXUiHelper helper) : IVpsClient
 
     public async Task DeleteConnectionAsync(string name, CancellationToken cancellationToken)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Post, $"panel/api/clients/del/{name}");
+        var encodedName = Uri.EscapeDataString(name);
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"panel/api/clients/del/{encodedName}");
 
         using var resp = await _helper.SendAsync(request, cancellationToken);
 
@@ -72,7 +73,8 @@ public class ThreeXUiClient(ThreeXUiHelper helper) : IVpsClient
         CancellationToken cancellationToken)
     {
         var body = new ThreeXUiUpdateClientDto(newName);
-        using var request = new HttpRequestMessage(HttpMethod.Post, $"panel/api/clients/update/{currentName}")
+        var encodedCurrentName = Uri.EscapeDataString(currentName);
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"panel/api/clients/update/{encodedCurrentName}")
         {
             Content = JsonContent.Create(body)
         };

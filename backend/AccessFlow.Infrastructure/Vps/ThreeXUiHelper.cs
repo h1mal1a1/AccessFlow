@@ -70,7 +70,8 @@ public class ThreeXUiHelper(HttpClient httpClient, IOptions<VpsOptions> options)
 
     internal async Task<ThreeXUiClientDto?> GetClientInfoAsync(string name, CancellationToken cancellationToken)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, $"panel/api/clients/get/{name}");
+        var encodedName = Uri.EscapeDataString(name);
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"panel/api/clients/get/{encodedName}");
         using var resp = await SendAsync(request, cancellationToken);
         if (resp.StatusCode == HttpStatusCode.NotFound)
             return null;
@@ -94,7 +95,8 @@ public class ThreeXUiHelper(HttpClient httpClient, IOptions<VpsOptions> options)
 
     internal async Task<string> GetConnectionStringAsync(string name, CancellationToken cancellationToken)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Get, $"panel/api/clients/links/{name}");
+        var encodedName = Uri.EscapeDataString(name);
+        using var request = new HttpRequestMessage(HttpMethod.Get, $"panel/api/clients/links/{encodedName}");
         using var resp = await SendAsync(request, cancellationToken);
 
         if (resp.StatusCode == HttpStatusCode.NotFound)
