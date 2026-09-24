@@ -27,16 +27,24 @@ public class ConnectionConfiguration : IEntityTypeConfiguration<Connection>
 
         builder.HasQueryFilter(x => x.Client.Status != ClientStatus.Deleted && x.Status != ConnectionStatus.Deleted);
 
-        builder.Property(x => x.IdExternal).HasColumnName("id_external").IsRequired();
+        builder.Property(x => x.IdExternal)
+            .HasColumnName("id_external");
+
         builder.Property(x => x.Name)
             .HasColumnName("name")
             .IsRequired();
-        builder.Property(x => x.ConnectionString).HasColumnName("connection_string").IsRequired();
-        builder.Property(x => x.SubUrl).HasColumnName("sub_url").IsRequired();
+
+        builder.Property(x => x.ConnectionString)
+            .HasColumnName("connection_string");
+
+        builder.Property(x => x.SubUrl)
+            .HasColumnName("sub_url");
+
         builder.Property(x => x.Status)
             .HasColumnName("status")
             .HasConversion<string>()
             .IsRequired();
+
         builder.Property(x => x.CreatedAt).HasColumnName("created_at").IsRequired();
 
         builder.Property(x => x.UpdatedAt).HasColumnName("updated_at").IsRequired();

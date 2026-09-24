@@ -1,9 +1,7 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace AccessFlow.Api.Contracts.Connections;
 
-public class UpdateConnectionRequest
-{
-    public required string IdExternal { get; set; }
-    public required string Name { get; set; }
-    public required string ConnectionString { get; set; }
-    public required string SubUrl { get; set; }
-}
+public sealed record UpdateConnectionRequest(
+    [property: Required, StringLength(100, MinimumLength = 1)] string Name
+);

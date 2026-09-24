@@ -1,15 +1,18 @@
 namespace AccessFlow.Application.Abstractions;
 
-public class VpsConnectionInfo
+public sealed record VpsConnectionInfo
 {
     /// <summary>
-    /// UUID in 3x-ui
+    /// UUID in 3X-UI.
     /// </summary>
-    public required string IdExternal { get; set; }      // UUID в 3X-UI
+    public required string IdExternal { get; init; }
+
     /// <summary>
-    /// client.Email in 3x-ui
+    /// client.email in 3X-UI.
     /// </summary>
-    public required string Name { get; set; }            // client.email в 3X-UI
-    public required string ConnectionString { get; set; }
-    public required string SubUrl { get; set; }
+    public required string Name { get; init; }
+
+    public required string ConnectionString { get; init; }
+
+    public required string SubUrl { get; init; }
 }

@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AccessFlow.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260904220256_InitialCreate")]
+    [Migration("20260924180406_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -140,10 +140,14 @@ namespace AccessFlow.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
-                        .HasDatabaseName("ix_clients_email");
+                        .IsUnique()
+                        .HasDatabaseName("ux_clients_email")
+                        .HasFilter("\"status\" <> 'Deleted'");
 
                     b.HasIndex("PhoneNumber")
-                        .HasDatabaseName("ix_clients_phone_number");
+                        .IsUnique()
+                        .HasDatabaseName("ux_clients_phone_number")
+                        .HasFilter("\"status\" <> 'Deleted'");
 
                     b.ToTable("clients", (string)null);
                 });
@@ -158,7 +162,6 @@ namespace AccessFlow.Infrastructure.Migrations
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
                     b.Property<string>("ConnectionString")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("connection_string");
 
@@ -171,7 +174,6 @@ namespace AccessFlow.Infrastructure.Migrations
                         .HasColumnName("id_client");
 
                     b.Property<string>("IdExternal")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("id_external");
 
@@ -186,7 +188,6 @@ namespace AccessFlow.Infrastructure.Migrations
                         .HasColumnName("status");
 
                     b.Property<string>("SubUrl")
-                        .IsRequired()
                         .HasColumnType("text")
                         .HasColumnName("sub_url");
 
@@ -253,6 +254,58 @@ namespace AccessFlow.Infrastructure.Migrations
                     b.HasIndex("IdConnection");
 
                     b.ToTable("notifications", (string)null);
+                });
+
+            modelBuilder.Entity("AccessFlow.Domain.Entities.OutboxMessage", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityAlwaysColumn(b.Property<long>("Id"));
+
+                    b.Property<int>("Attempts")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("attempts");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at")
+                        .HasDefaultValueSql("now()");
+
+                    b.Property<string>("Error")
+                        .HasColumnType("text")
+                        .HasColumnName("error");
+
+                    b.Property<string>("Payload")
+                        .IsRequired()
+                        .HasColumnType("jsonb")
+                        .HasColumnName("payload");
+
+                    b.Property<DateTimeOffset?>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("processed_at");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("status");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("type");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Status", "CreatedAt")
+                        .HasDatabaseName("ix_outbox_messages_status_created_at");
+
+                    b.ToTable("outbox_messages", (string)null);
                 });
 
             modelBuilder.Entity("AccessFlow.Domain.Entities.BulkOperationItem", b =>

@@ -1,8 +1,9 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace AccessFlow.Api.Contracts.Clients;
 
-public class UpdateClientRequest
-{
-    public required string Email { get; set; }
-    public required string PhoneNumber { get; set; }
-    public string? Comment { get; set; }
-}
+public sealed record UpdateClientRequest(
+    [property: Required, EmailAddress, StringLength(254)] string Email,
+    [property: Required, Phone, StringLength(30)] string PhoneNumber,
+    [property: StringLength(500)] string? Comment
+);

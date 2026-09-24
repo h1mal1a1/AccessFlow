@@ -26,8 +26,7 @@ public class ClientConnectionTests : IClassFixture<IntegrationTestFactory>
     public async Task DeleteClient_WhenClientHasActiveConnection_MakesConnectionUnavailable()
     {
         var idClient = await _clientHelper.CreateClientAsync();
-        var idConnection = await _connectionHelper.CreateConnectionAsync(
-            idClient, RndStr(), RndStr(), RndStr(), RndStr());
+        var idConnection = await _connectionHelper.CreateConnectionAsync(idClient, RndStr());
         await _clientHelper.DeleteClientAsync(idClient);
         var resp = await _client.GetAsync($"/api/connections/{idConnection}");
         Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
@@ -37,8 +36,8 @@ public class ClientConnectionTests : IClassFixture<IntegrationTestFactory>
     public async Task DeleteClient_WhenClientHasActiveConnections_HidesConnectionsFromActiveList()
     {
         var idClient = await _clientHelper.CreateClientAsync();
-        var idCnn1 = await _connectionHelper.CreateConnectionAsync(idClient, RndStr(), RndStr(), RndStr(), RndStr());
-        var idCnn2 = await _connectionHelper.CreateConnectionAsync(idClient, RndStr(), RndStr(), RndStr(), RndStr());
+        var idCnn1 = await _connectionHelper.CreateConnectionAsync(idClient, RndStr());
+        var idCnn2 = await _connectionHelper.CreateConnectionAsync(idClient, RndStr());
         await _clientHelper.DeleteClientAsync(idClient);
         var listActiveConnections = await _connectionHelper.GetActiveConnectionsAsync(1, 100);
         var idsActiveConnections = listActiveConnections.Select(x => x.Id);
@@ -50,8 +49,8 @@ public class ClientConnectionTests : IClassFixture<IntegrationTestFactory>
     public async Task DeleteClient_WhenClientHasActiveConnections_MovesConnectionsToDeletedList()
     {
         var idClient = await _clientHelper.CreateClientAsync();
-        var idCnn1 = await _connectionHelper.CreateConnectionAsync(idClient, RndStr(), RndStr(), RndStr(), RndStr());
-        var idCnn2 = await _connectionHelper.CreateConnectionAsync(idClient, RndStr(), RndStr(), RndStr(), RndStr());
+        var idCnn1 = await _connectionHelper.CreateConnectionAsync(idClient, RndStr());
+        var idCnn2 = await _connectionHelper.CreateConnectionAsync(idClient, RndStr());
         await _clientHelper.DeleteClientAsync(idClient);
         var listDeletedConnections = await _connectionHelper.GetDeletedConnections(1, 100);
         var idsDeletedConnections = listDeletedConnections.Select(x => x.Id);
@@ -69,14 +68,7 @@ public class ClientConnectionTests : IClassFixture<IntegrationTestFactory>
     public async Task CreateConnection_And_DeleteClient_ConcurrentExecution_DoesNotLeaveActiveConnection()
     {
         var idClient = await _clientHelper.CreateClientAsync();
-        CreateConnectionDto createConnectionDto = new()
-        {
-            ConnectionString = RndStr(),
-            IdExternal = RndStr(),
-            Name = RndStr(),
-            SubUrl = RndStr(),
-            IdClient = idClient
-        };
+        var createConnectionDto = new CreateConnectionDto(idClient, RndStr());
         var t1 = _client.PostAsJsonAsync("/api/connections", createConnectionDto);
         var t2 = _clientHelper.DeleteClientAsync(idClient);
         await Task.WhenAll(t1, t2);

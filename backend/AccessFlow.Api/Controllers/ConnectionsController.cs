@@ -16,75 +16,45 @@ public class ConnectionsController(IConnectionService connectionService, IOption
     private readonly PaginationOptions _paginationOptions = paginationOptions.Value;
 
     [HttpGet("{id:long}")]
-    public async Task<ConnectionDto> GetConnectionById(long id, CancellationToken cancellationToken)
-        => await _connectionService.GetConnectionAsync(id, cancellationToken);
+    public async Task<ConnectionDto> GetConnectionById(long id, CancellationToken ct)
+        => await _connectionService.GetConnectionAsync(id, ct);
 
     [HttpGet]
     public async Task<List<ConnectionListDto>> GetConnections(int page = 1, int? pageSize = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken ct = default)
     {
-        var actualPageSize = pageSize ?? _paginationOptions.DefaultPageSize;
-        if (page < 1)
-            page = 1;
-
-        if (actualPageSize > _paginationOptions.MaxPageSize)
-            actualPageSize = _paginationOptions.MaxPageSize;
-        if (actualPageSize < 1)
-            actualPageSize = _paginationOptions.DefaultPageSize;
-
-        return await _connectionService.GetConnectionsAsync(page, actualPageSize, cancellationToken);
+        var (pageNumber, actualPageSize) = PaginationHelper.Normalize(page, pageSize, _paginationOptions);
+        return await _connectionService.GetConnectionsAsync(pageNumber, actualPageSize, ct);
     }
 
     [HttpPost]
-    public async Task<ActionResult<long>> CreateConnection(CreateConnectionRequest request,
-        CancellationToken cancellationToken)
+    public async Task<ActionResult<long>> CreateConnection(CreateConnectionRequest request, CancellationToken ct)
     {
-        CreateConnectionDto connectionDto = new()
-        {
-            IdClient = request.IdClient,
-            IdExternal = request.IdExternal,
-            Name = request.Name,
-            ConnectionString = request.ConnectionString,
-            SubUrl = request.SubUrl
-        };
-        var id = await _connectionService.CreateConnectionAsync(connectionDto, cancellationToken);
+        var connectionDto = new CreateConnectionDto(request.IdClient, request.Name);
+        var id = await _connectionService.CreateConnectionAsync(connectionDto, ct);
         return CreatedAtAction(nameof(GetConnectionById), new { id }, id);
     }
 
     [HttpDelete("{id:long}")]
-    public async Task<IActionResult> DeleteConnection(long id, CancellationToken cancellationToken)
+    public async Task<IActionResult> DeleteConnection(long id, CancellationToken ct)
     {
-        await _connectionService.DeleteConnectionAsync(id, cancellationToken);
-        return NoContent();
+        await _connectionService.DeleteConnectionAsync(id, ct);
+        return Accepted();
     }
 
     [HttpPut("{id:long}")]
-    public async Task<IActionResult> UpdateConnection(long id, UpdateConnectionRequest request,
-        CancellationToken cancellationToken)
+    public async Task<IActionResult> UpdateConnection(long id, UpdateConnectionRequest request, CancellationToken ct)
     {
-        UpdateConnectionDto updateConnectionDto = new()
-        {
-            IdExternal = request.IdExternal,
-            Name = request.Name,
-            ConnectionString = request.ConnectionString,
-            SubUrl = request.SubUrl
-        };
-        await _connectionService.UpdateConnectionAsync(id, updateConnectionDto, cancellationToken);
-        return NoContent();
+        var updateConnectionDto = new UpdateConnectionDto(request.Name);
+        await _connectionService.UpdateConnectionAsync(id, updateConnectionDto, ct);
+        return Accepted();
     }
 
     [HttpGet("deleted")]
     public async Task<List<ConnectionListDto>> GetDeletedConnections(int page = 1, int? pageSize = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken ct = default)
     {
-        var actualPageSize = pageSize ?? _paginationOptions.DefaultPageSize;
-        if (page < 1)
-            page = 1;
-
-        if (actualPageSize > _paginationOptions.MaxPageSize)
-            actualPageSize = _paginationOptions.MaxPageSize;
-        if (actualPageSize < 1)
-            actualPageSize = _paginationOptions.DefaultPageSize;
-        return await _connectionService.GetDeletedConnectionsAsync(page, actualPageSize, cancellationToken);
+        var (pageNumber, actualPageSize) = PaginationHelper.Normalize(page, pageSize, _paginationOptions);
+        return await _connectionService.GetDeletedConnectionsAsync(pageNumber, actualPageSize, ct);
     }
 }

@@ -27,7 +27,7 @@ public class ConnectionTests : IClassFixture<IntegrationTestFactory>
     public async Task CreateConnection_WithValidData_ReturnsCreated()
     {
         var id = await _clientHelper.CreateClientAsync();
-        await _connectionHelper.CreateConnectionAsync(id, RndStr(), RndStr(), RndStr(), RndStr());
+        await _connectionHelper.CreateConnectionAsync(id, RndStr());
     }
 
     /// <summary>
@@ -38,7 +38,7 @@ public class ConnectionTests : IClassFixture<IntegrationTestFactory>
     public async Task CreateConnection_WithValidData_ReturnsCreatedWithIdAndLocation()
     {
         var id = await _clientHelper.CreateClientAsync();
-        var idConnection = await _connectionHelper.CreateConnectionAsync(id, RndStr(), RndStr(), RndStr(), RndStr());
+        var idConnection = await _connectionHelper.CreateConnectionAsync(id, RndStr());
         Assert.True(idConnection > 0);
     }
 
@@ -54,8 +54,7 @@ public class ConnectionTests : IClassFixture<IntegrationTestFactory>
         string idExternal = RndStr();
         string name = RndStr();
         string subUrl = RndStr();
-        var idConnection = await _connectionHelper.CreateConnectionAsync(idClient, connectionString, idExternal, name,
-            subUrl);
+        var idConnection = await _connectionHelper.CreateConnectionAsync(idClient, name);
         var connection = await _connectionHelper.GetConnectionAsync(idConnection);
         Assert.Equal(connectionString, connection.ConnectionString);
         Assert.Equal(idExternal, connection.IdExternal);
@@ -71,14 +70,7 @@ public class ConnectionTests : IClassFixture<IntegrationTestFactory>
     [Fact]
     public async Task CreateConnection_WhenClientDoesNotExist_ReturnsNotFound()
     {
-        CreateConnectionDto createConnectionDto = new()
-        {
-            ConnectionString = RndStr(),
-            IdExternal = RndStr(),
-            Name = RndStr(),
-            SubUrl = RndStr(),
-            IdClient = long.MaxValue
-        };
+        var createConnectionDto = new CreateConnectionDto(long.MaxValue, RndStr());
         var resp = await _client.PostAsJsonAsync("/api/connections", createConnectionDto);
         Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
     }
@@ -92,14 +84,7 @@ public class ConnectionTests : IClassFixture<IntegrationTestFactory>
     {
         var idClient = await _clientHelper.CreateClientAsync();
         await _clientHelper.DeleteClientAsync(idClient);
-        CreateConnectionDto createConnectionDto = new()
-        {
-            ConnectionString = RndStr(),
-            IdExternal = RndStr(),
-            Name = RndStr(),
-            SubUrl = RndStr(),
-            IdClient = idClient
-        };
+        var createConnectionDto = new CreateConnectionDto(idClient, RndStr());
         var resp = await _client.PostAsJsonAsync("/api/connections", createConnectionDto);
         Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
     }
@@ -123,21 +108,11 @@ public class ConnectionTests : IClassFixture<IntegrationTestFactory>
     public async Task UpdateConnection_WhenConnectionExists_ReturnsNoContentAndUpdatesData()
     {
         var idClient = await _clientHelper.CreateClientAsync();
-        var idConnection = await _connectionHelper.CreateConnectionAsync(
-            idClient, RndStr(), RndStr(), RndStr(), RndStr());
-        UpdateConnectionDto updateConnectionDto = new()
-        {
-            ConnectionString = RndStr(),
-            IdExternal = RndStr(),
-            Name = RndStr(),
-            SubUrl = RndStr()
-        };
+        var idConnection = await _connectionHelper.CreateConnectionAsync(idClient, RndStr());
+        var updateConnectionDto = new UpdateConnectionDto(RndStr());
         await _connectionHelper.UpdateConnectionRequest(idConnection, updateConnectionDto);
         var connection = await _connectionHelper.GetConnectionAsync(idConnection);
-        Assert.Equal(updateConnectionDto.ConnectionString, connection.ConnectionString);
-        Assert.Equal(updateConnectionDto.IdExternal, connection.IdExternal);
         Assert.Equal(updateConnectionDto.Name, connection.Name);
-        Assert.Equal(updateConnectionDto.SubUrl, connection.SubUrl);
     }
 
     /// <summary>
@@ -147,13 +122,7 @@ public class ConnectionTests : IClassFixture<IntegrationTestFactory>
     [Fact]
     public async Task UpdateConnection_WhenConnectionDoesNotExist_ReturnsNotFound()
     {
-        UpdateConnectionDto updateConnectionDto = new()
-        {
-            ConnectionString = RndStr(),
-            IdExternal = RndStr(),
-            Name = RndStr(),
-            SubUrl = RndStr()
-        };
+        var updateConnectionDto = new UpdateConnectionDto(RndStr());
         var resp = await _client.PutAsJsonAsync($"/api/connections/{long.MaxValue}", updateConnectionDto);
         Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
     }
@@ -166,16 +135,9 @@ public class ConnectionTests : IClassFixture<IntegrationTestFactory>
     public async Task UpdateConnection_WhenConnectionIsDeleted_ReturnsNotFound()
     {
         var idClient = await _clientHelper.CreateClientAsync();
-        var idConnection = await _connectionHelper.CreateConnectionAsync(
-            idClient, RndStr(), RndStr(), RndStr(), RndStr());
+        var idConnection = await _connectionHelper.CreateConnectionAsync(idClient, RndStr());
         await _connectionHelper.DeleteConnection(idConnection);
-        UpdateConnectionDto updateConnectionDto = new()
-        {
-            ConnectionString = RndStr(),
-            IdExternal = RndStr(),
-            Name = RndStr(),
-            SubUrl = RndStr()
-        };
+        var updateConnectionDto = new UpdateConnectionDto(RndStr());
         var resp = await _client.PutAsJsonAsync($"/api/connections/{idConnection}", updateConnectionDto);
         Assert.Equal(HttpStatusCode.NotFound, resp.StatusCode);
     }
@@ -188,8 +150,7 @@ public class ConnectionTests : IClassFixture<IntegrationTestFactory>
     public async Task DeleteConnection_WhenConnectionExists_ReturnsNoContentAndBecomesUnavailable()
     {
         var idClient = await _clientHelper.CreateClientAsync();
-        var idConnection = await _connectionHelper.CreateConnectionAsync(
-            idClient, RndStr(), RndStr(), RndStr(), RndStr());
+        var idConnection = await _connectionHelper.CreateConnectionAsync(idClient, RndStr());
         await _connectionHelper.DeleteConnection(idConnection);
 
         var response = await _client.GetAsync($"/api/connections/{idConnection}");
@@ -215,8 +176,7 @@ public class ConnectionTests : IClassFixture<IntegrationTestFactory>
     public async Task GetDeletedConnections_AfterConnectionDeleted_ContainsDeletedConnection()
     {
         var idClient = await _clientHelper.CreateClientAsync();
-        var idConnection = await _connectionHelper.CreateConnectionAsync(
-            idClient, RndStr(), RndStr(), RndStr(), RndStr());
+        var idConnection = await _connectionHelper.CreateConnectionAsync(idClient, RndStr());
         await _connectionHelper.DeleteConnection(idConnection);
         var listDeleted = await _connectionHelper.GetDeletedConnections(1, 100);
         var deletedCon = listDeleted.FirstOrDefault(con => con.Id == idConnection);
@@ -235,19 +195,9 @@ public class ConnectionTests : IClassFixture<IntegrationTestFactory>
     public async Task CreateConnection_WithDuplicateUniqueField_ReturnsConflict(string field)
     {
         var idClient = await _clientHelper.CreateClientAsync();
-        var connectionString = RndStr();
-        var idExternal = RndStr();
         var name = RndStr();
-        var subUrl = RndStr();
-        await _connectionHelper.CreateConnectionAsync(idClient, connectionString, idExternal, name, subUrl);
-        CreateConnectionDto createConnectionDto = new()
-        {
-            IdClient = idClient,
-            ConnectionString = RndStr(),
-            IdExternal = field == "IdExternal" ? idExternal : RndStr(),
-            Name = field == "Name" ? name : RndStr(),
-            SubUrl = field == "SubUrl" ? subUrl : RndStr()
-        };
+        await _connectionHelper.CreateConnectionAsync(idClient, name);
+        var createConnectionDto = new CreateConnectionDto(idClient, field == "Name" ? name : RndStr());
         var resp = await _client.PostAsJsonAsync($"/api/connections", createConnectionDto);
         Assert.Equal(HttpStatusCode.Conflict, resp.StatusCode);
     }
@@ -263,17 +213,11 @@ public class ConnectionTests : IClassFixture<IntegrationTestFactory>
     public async Task UpdateConnection_WithDuplicateUniqueField_ReturnsConflict(string field)
     {
         var idClient = await _clientHelper.CreateClientAsync();
-        var idConn1 = await _connectionHelper.CreateConnectionAsync(idClient, RndStr(), RndStr(), RndStr(), RndStr());
-        var idConn2 = await _connectionHelper.CreateConnectionAsync(idClient, RndStr(), RndStr(), RndStr(), RndStr());
+        var idConn1 = await _connectionHelper.CreateConnectionAsync(idClient, RndStr());
+        var idConn2 = await _connectionHelper.CreateConnectionAsync(idClient, RndStr());
 
         var cnn1 = await _connectionHelper.GetConnectionAsync(idConn1);
-        UpdateConnectionDto updateConnectionDto = new()
-        {
-            ConnectionString = RndStr(),
-            IdExternal = field == "IdExternal" ? cnn1.IdExternal : RndStr(),
-            Name = field == "Name" ? cnn1.Name : RndStr(),
-            SubUrl = field == "SubUrl" ? cnn1.SubUrl : RndStr()
-        };
+        UpdateConnectionDto updateConnectionDto = new(field == "Name" ? cnn1.Name : RndStr());
         var resp = await _client.PutAsJsonAsync($"/api/connections/{idConn2}", updateConnectionDto);
         Assert.Equal(HttpStatusCode.Conflict, resp.StatusCode);
     }
@@ -289,21 +233,9 @@ public class ConnectionTests : IClassFixture<IntegrationTestFactory>
     public async Task CreateConnection_WithSameUniqueFieldAfterSoftDelete_ReturnsCreated(string field)
     {
         var idClient = await _clientHelper.CreateClientAsync();
-        var connectionString = RndStr();
-        var idExternal = RndStr();
         var name = RndStr();
-        var subUrl = RndStr();
-
-        CreateConnectionDto createConnectionDto = new()
-        {
-            IdClient = idClient,
-            ConnectionString = connectionString,
-            IdExternal = field == "IdExternal" ? idExternal : RndStr(),
-            Name = field == "Name" ? name : RndStr(),
-            SubUrl = field == "SubUrl" ? subUrl : RndStr()
-        };
-        var idConn1 = await _connectionHelper.CreateConnectionAsync(idClient, connectionString,
-            idExternal, name, subUrl);
+        var createConnectionDto = new CreateConnectionDto(idClient, field == "Name" ? name : RndStr());
+        var idConn1 = await _connectionHelper.CreateConnectionAsync(idClient, name);
         await _connectionHelper.DeleteConnection(idConn1);
         var response = await _client.PostAsJsonAsync("/api/connections", createConnectionDto);
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -317,8 +249,8 @@ public class ConnectionTests : IClassFixture<IntegrationTestFactory>
     public async Task GetConnections_ReturnsOnlyActiveConnections()
     {
         var idClient = await _clientHelper.CreateClientAsync();
-        var idCon1 = await _connectionHelper.CreateConnectionAsync(idClient, RndStr(), RndStr(), RndStr(), RndStr());
-        var idCon2 = await _connectionHelper.CreateConnectionAsync(idClient, RndStr(), RndStr(), RndStr(), RndStr());
+        var idCon1 = await _connectionHelper.CreateConnectionAsync(idClient, RndStr());
+        var idCon2 = await _connectionHelper.CreateConnectionAsync(idClient, RndStr());
         await _connectionHelper.DeleteConnection(idCon2);
         var listConnections = await _connectionHelper.GetActiveConnectionsAsync(1, 100);
         var con1 = listConnections.FirstOrDefault(x => x.Id == idCon1);
@@ -336,7 +268,7 @@ public class ConnectionTests : IClassFixture<IntegrationTestFactory>
     {
         var idClient = await _clientHelper.CreateClientAsync();
         for (int i = 0; i < 6; i++)
-            await _connectionHelper.CreateConnectionAsync(idClient, RndStr(), RndStr(), RndStr(), RndStr());
+            await _connectionHelper.CreateConnectionAsync(idClient, RndStr());
         var listConnectionsFromPage1 = await _connectionHelper.GetActiveConnectionsAsync(1, 2);
         var listConnectionsFromPage2 = await _connectionHelper.GetActiveConnectionsAsync(2, 2);
         Assert.Equal(2, listConnectionsFromPage1.Count);
@@ -365,8 +297,7 @@ public class ConnectionTests : IClassFixture<IntegrationTestFactory>
         var connectionString = RndStr();
         var subUrl = RndStr();
 
-        var idConnection = await _connectionHelper.CreateConnectionAsync(idClient, connectionString, RndStr(),
-            RndStr(), subUrl);
+        var idConnection = await _connectionHelper.CreateConnectionAsync(idClient, RndStr());
 
         // Active list
         var activeResponse = await _client.GetAsync("/api/connections?page=1&pageSize=100");

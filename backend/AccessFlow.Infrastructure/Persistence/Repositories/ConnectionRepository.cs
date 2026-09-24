@@ -1,5 +1,4 @@
 using AccessFlow.Application.Abstractions;
-using Npgsql;
 using AccessFlow.Infrastructure.Persistence.Data;
 using AccessFlow.Domain.Entities;
 using AccessFlow.Domain.Constants;
@@ -32,48 +31,13 @@ public class ConnectionRepository(AppDbContext dbContext) : IConnectionRepositor
     public async Task AddConnectionAsync(Connection connection, CancellationToken cancellationToken)
     {
         await _dbContext.Connections.AddAsync(connection, cancellationToken);
-        try
-        {
-            await _dbContext.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateException ex)
-            when (ex.InnerException is PostgresException
-            {
-                SqlState: PostgresErrorCodes.UniqueViolation
-            })
-        {
-            throw new ConnectionConflictException(
-                "Connection with the same IdExternal, Name or SubUrl already exists.");
-        }
     }
-    public async Task UpdateConnectionAsync(long id, string idExternal, string name, string connectionString,
-        string subUrl, CancellationToken cancellationToken)
+    public async Task MarkDeletingAsync(long id, CancellationToken cancellationToken)
     {
         Connection connection = await _dbContext.Connections.FirstOrDefaultAsync(x => x.Id == id, cancellationToken) ??
             throw new ConnectionNotFoundException(id);
-        connection.Name = name;
-        connection.IdExternal = idExternal;
-        connection.ConnectionString = connectionString;
-        connection.SubUrl = subUrl;
+        connection.Status = ConnectionStatus.Deleting;
         connection.UpdatedAt = DateTimeOffset.UtcNow;
-        try
-        {
-            await _dbContext.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateException ex)
-            when (ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation })
-        {
-            throw new ConnectionConflictException(
-                "Connection with the same IdExternal, Name or SubUrl already exists.");
-        }
-    }
-    public async Task DeleteConnectionAsync(long id, CancellationToken cancellationToken)
-    {
-        Connection connection = await _dbContext.Connections.FirstOrDefaultAsync(x => x.Id == id, cancellationToken) ??
-            throw new ConnectionNotFoundException(id);
-        connection.Status = ConnectionStatus.Deleted;
-        connection.UpdatedAt = DateTimeOffset.UtcNow;
-        await _dbContext.SaveChangesAsync(cancellationToken);
     }
     public async Task<List<Connection>> GetDeletedConnectionsAsync(int page, int pageSize,
         CancellationToken cancellationToken)
@@ -87,4 +51,10 @@ public class ConnectionRepository(AppDbContext dbContext) : IConnectionRepositor
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<Connection> GetConnectionForUpdateAsync(long id, CancellationToken ct)
+    {
+        return await _dbContext.Connections.FromSqlInterpolated($"SELECT * FROM connections WHERE id = {id} FOR UPDATE")
+            .FirstOrDefaultAsync(ct) ??
+            throw new ConnectionNotFoundException(id);
+    }
 }

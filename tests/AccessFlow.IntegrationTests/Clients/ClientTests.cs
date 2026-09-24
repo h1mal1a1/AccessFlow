@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using AccessFlow.Api.Contracts.Clients;
 using AccessFlow.Application.Clients.DTOs;
 using AccessFlow.Domain.Constants;
 using AccessFlow.IntegrationTests.Infrastructure;
@@ -200,14 +201,8 @@ public class ClientTests : IClassFixture<IntegrationTestFactory>
     {
         for (int i = 1; i < 6; i++)
         {
-            ClientDto clientDto = new()
-            {
-                Email = $"email{i}",
-                PhoneNumber = $"+7999999999{i}",
-                Comment = null,
-                Status = ClientStatus.Active
-            };
-            var respCreate = await _client.PostAsJsonAsync("/api/clients", clientDto);
+            var clientRequest = new CreateClientRequest($"email{i}", $"+7999999999{i}", null);
+            var respCreate = await _client.PostAsJsonAsync("/api/clients", clientRequest);
             var id = await respCreate.Content.ReadFromJsonAsync<long>();
             Assert.NotNull(respCreate.Headers.Location);
             Assert.Equal($"/api/clients/{id}", respCreate.Headers.Location.PathAndQuery);

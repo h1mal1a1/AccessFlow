@@ -52,7 +52,8 @@ public class ThreeXUiClient(ThreeXUiHelper helper) : IVpsClient
 
     public async Task DeleteConnectionAsync(string name, CancellationToken cancellationToken)
     {
-        using var request = new HttpRequestMessage(HttpMethod.Post, $"panel/api/clients/del/{name}");
+        var encodedName = Uri.EscapeDataString(name);
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"panel/api/clients/del/{encodedName}");
 
         using var resp = await _helper.SendAsync(request, cancellationToken);
 
@@ -68,15 +69,12 @@ public class ThreeXUiClient(ThreeXUiHelper helper) : IVpsClient
                 $"3X-UI failed to delete client '{name}': {result.Msg}");
     }
 
-    public async Task<VpsConnectionInfo> UpdateConnectionAsync(string currentName, string newName,
+    public async Task<VpsConnectionInfo> RenameConnectionAsync(string currentName, string newName,
         CancellationToken cancellationToken)
     {
-        var body = new ThreeXUiUpdateClientDto
-        {
-            Email = newName
-        };
-
-        using var request = new HttpRequestMessage(HttpMethod.Post, $"panel/api/clients/update/{currentName}")
+        var body = new ThreeXUiUpdateClientDto(newName);
+        var encodedCurrentName = Uri.EscapeDataString(currentName);
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"panel/api/clients/update/{encodedCurrentName}")
         {
             Content = JsonContent.Create(body)
         };

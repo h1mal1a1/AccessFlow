@@ -49,6 +49,25 @@ namespace AccessFlow.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "outbox_messages",
+                columns: table => new
+                {
+                    id = table.Column<long>(type: "bigint", nullable: false)
+                        .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityAlwaysColumn),
+                    type = table.Column<string>(type: "text", nullable: false),
+                    payload = table.Column<string>(type: "jsonb", nullable: false),
+                    status = table.Column<string>(type: "text", nullable: false),
+                    created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false, defaultValueSql: "now()"),
+                    processed_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: true),
+                    attempts = table.Column<int>(type: "integer", nullable: false, defaultValue: 0),
+                    error = table.Column<string>(type: "text", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_outbox_messages", x => x.id);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "bulk_operation_items",
                 columns: table => new
                 {
@@ -83,10 +102,10 @@ namespace AccessFlow.Infrastructure.Migrations
                     id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn),
                     id_client = table.Column<long>(type: "bigint", nullable: false),
-                    id_external = table.Column<string>(type: "text", nullable: false),
+                    id_external = table.Column<string>(type: "text", nullable: true),
                     name = table.Column<string>(type: "text", nullable: false),
-                    connection_string = table.Column<string>(type: "text", nullable: false),
-                    sub_url = table.Column<string>(type: "text", nullable: false),
+                    connection_string = table.Column<string>(type: "text", nullable: true),
+                    sub_url = table.Column<string>(type: "text", nullable: true),
                     status = table.Column<string>(type: "text", nullable: false),
                     created_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
                     updated_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
@@ -143,14 +162,18 @@ namespace AccessFlow.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "ix_clients_email",
+                name: "ux_clients_email",
                 table: "clients",
-                column: "email");
+                column: "email",
+                unique: true,
+                filter: "\"status\" <> 'Deleted'");
 
             migrationBuilder.CreateIndex(
-                name: "ix_clients_phone_number",
+                name: "ux_clients_phone_number",
                 table: "clients",
-                column: "phone_number");
+                column: "phone_number",
+                unique: true,
+                filter: "\"status\" <> 'Deleted'");
 
             migrationBuilder.CreateIndex(
                 name: "IX_connections_id_client",
@@ -187,6 +210,11 @@ namespace AccessFlow.Infrastructure.Migrations
                 name: "IX_notifications_id_connection",
                 table: "notifications",
                 column: "id_connection");
+
+            migrationBuilder.CreateIndex(
+                name: "ix_outbox_messages_status_created_at",
+                table: "outbox_messages",
+                columns: new[] { "status", "created_at" });
         }
 
         /// <inheritdoc />
@@ -197,6 +225,9 @@ namespace AccessFlow.Infrastructure.Migrations
 
             migrationBuilder.DropTable(
                 name: "notifications");
+
+            migrationBuilder.DropTable(
+                name: "outbox_messages");
 
             migrationBuilder.DropTable(
                 name: "bulk_operation");

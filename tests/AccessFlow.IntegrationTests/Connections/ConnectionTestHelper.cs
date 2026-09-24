@@ -12,18 +12,9 @@ public class ConnectionTestHelper(HttpClient client)
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web)
     { Converters = { new JsonStringEnumConverter() } };
 
-    public async Task<long> CreateConnectionAsync(long idClient, string connectionString, string idExternal,
-        string name, string subUrl)
+    public async Task<long> CreateConnectionAsync(long idClient, string name)
     {
-        CreateConnectionDto createConnectionDto = new()
-        {
-            ConnectionString = connectionString,
-            IdExternal = idExternal,
-            IdClient = idClient,
-            Name = name,
-            SubUrl = subUrl
-        };
-
+        var createConnectionDto = new CreateConnectionDto(idClient, name);
         var response = await _client.PostAsJsonAsync("/api/connections", createConnectionDto);
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
         var id = await response.Content.ReadFromJsonAsync<long>();

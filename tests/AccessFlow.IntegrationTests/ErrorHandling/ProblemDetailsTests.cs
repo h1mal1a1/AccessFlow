@@ -35,14 +35,7 @@ public class ProblemDetailsTests : IClassFixture<IntegrationTestFactory>
     public async Task CreateConnection_WhenUniqueFieldAlreadyExists_ReturnsProblemDetails()
     {
         var idClient = await _clientHelper.CreateClientAsync();
-        CreateConnectionDto createConnectionDto = new()
-        {
-            ConnectionString = RndStr(),
-            IdExternal = RndStr(),
-            Name = RndStr(),
-            SubUrl = RndStr(),
-            IdClient = idClient
-        };
+        var createConnectionDto = new CreateConnectionDto(idClient, RndStr());
         var firstResponse = await _client.PostAsJsonAsync("/api/connections", createConnectionDto);
         Assert.Equal(HttpStatusCode.Created, firstResponse.StatusCode);
 
