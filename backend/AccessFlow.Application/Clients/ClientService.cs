@@ -31,6 +31,7 @@ public class ClientService(
             UpdatedAt = now,
         };
         await _clientRepository.AddClientAsync(client, ct);
+        await _unitOfWork.SaveChangesAsync(ct);
         return client.Id;
     }
     public async Task<ClientDto> GetClientAsync(long id, CancellationToken ct)
@@ -49,6 +50,7 @@ public class ClientService(
     {
         await _clientRepository.UpdateClientAsync(id, updateClientDto.Email, updateClientDto.PhoneNumber,
             updateClientDto.Comment, ct);
+        await _unitOfWork.SaveChangesAsync(ct);
     }
     public async Task DeleteClientAsync(long id, CancellationToken ct)
     {
@@ -59,7 +61,7 @@ public class ClientService(
             var now = DateTimeOffset.UtcNow;
             foreach (var connection in connections)
             {
-                connection.Status = ConnectionStatus.Deleted;
+                connection.Status = ConnectionStatus.Deleting;
                 connection.UpdatedAt = now;
 
                 var connectionPayload = new ConnectionDeletePayload(connection.Id, connection.Name);

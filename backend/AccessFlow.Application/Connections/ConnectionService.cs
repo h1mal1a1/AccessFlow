@@ -1,6 +1,7 @@
 using AccessFlow.Application.Abstractions;
 using AccessFlow.Application.Connections.DTOs;
 using AccessFlow.Application.Connections.DTOs.Payload;
+using AccessFlow.Application.Connections.Exceptions;
 using AccessFlow.Domain.Constants;
 using AccessFlow.Domain.Entities;
 using System.Text.Json;
@@ -11,13 +12,15 @@ public class ConnectionService(
     IConnectionRepository connectionRepository,
     IClientRepository clientRepository,
     ITransactionManager transactionManager,
-    IOutboxMessageRepository outboxMessageRepository)
+    IOutboxMessageRepository outboxMessageRepository,
+    IUnitOfWork unitOfWork)
     : IConnectionService
 {
     private readonly IConnectionRepository _connectionRepository = connectionRepository;
     private readonly IClientRepository _clientRepository = clientRepository;
     private readonly ITransactionManager _transactionManager = transactionManager;
     private readonly IOutboxMessageRepository _outboxMessageRepository = outboxMessageRepository;
+    private readonly IUnitOfWork _unitOfWork = unitOfWork;
     public async Task<long> CreateConnectionAsync(CreateConnectionDto createConnectionDto, CancellationToken ct)
     {
         return await _transactionManager.ExecuteInTransactionAsync(async cancellationToken =>
@@ -36,6 +39,8 @@ public class ConnectionService(
                 UpdatedAt = now,
             };
             await _connectionRepository.AddConnectionAsync(connection, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
+
             var createPayload = new ConnectionCreatePayload(connection.Name, connection.Id);
             var payload = JsonSerializer.Serialize(createPayload);
             OutboxMessage outboxMessage = new()
@@ -46,10 +51,8 @@ public class ConnectionService(
                 CreatedAt = now
             };
             await _outboxMessageRepository.AddMessageAsync(outboxMessage, cancellationToken);
-
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
             return connection.Id;
-
-
         }, ct);
     }
     public async Task<ConnectionDto> GetConnectionAsync(long id, CancellationToken cancellationToken)
@@ -71,17 +74,20 @@ public class ConnectionService(
     {
         await _transactionManager.ExecuteInTransactionAsync(async cancellationToken =>
         {
-            var connection = await _connectionRepository.GetConnectionAsync(id, cancellationToken);
+            var now = DateTimeOffset.UtcNow;
+            var connection = await _connectionRepository.GetConnectionForUpdateAsync(id, cancellationToken);
             if (connection.Status != ConnectionStatus.Active)
-                throw new InvalidOperationException(
-                    $"Connection '{id}' must be Active to update.");
+                throw new ConnectionInvalidStateException($"Connection '{id}' must be Active to update.");
 
             if (connection.Name == updateConnectionDto.Name)
                 return;
 
             if (connection.IdExternal is null)
-                throw new InvalidOperationException(
-                    $"Active connection '{id}' has no external id.");
+                throw new InvalidOperationException($"Active connection '{id}' has no external id.");
+
+            connection.Status = ConnectionStatus.Updating;
+            connection.UpdatedAt = now;
+
             var updatePayload = new ConnectionUpdatePayload(
                 connection.Id, connection.Name, updateConnectionDto.Name, connection.IdExternal);
             var payload = JsonSerializer.Serialize(updatePayload);
@@ -91,20 +97,21 @@ public class ConnectionService(
                 Type = OutboxMessageType.ConnectionUpdate,
                 Status = OutboxMessageStatus.Pending,
                 Payload = payload,
-                CreatedAt = DateTimeOffset.UtcNow
+                CreatedAt = now
             };
 
             await _outboxMessageRepository.AddMessageAsync(message, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
         }, ct);
     }
     public async Task DeleteConnectionAsync(long id, CancellationToken ct)
     {
         await _transactionManager.ExecuteInTransactionAsync(async cancellationToken =>
         {
-            var connection = await _connectionRepository.GetConnectionAsync(id, cancellationToken);
+            var connection = await _connectionRepository.GetConnectionForUpdateAsync(id, cancellationToken);
 
             if (connection.Status is not (ConnectionStatus.Active or ConnectionStatus.Pending))
-                throw new InvalidOperationException(
+                throw new ConnectionInvalidStateException(
                     $"Connection '{id}' cannot be deleted in status '{connection.Status}'.");
 
             var deletePayload = new ConnectionDeletePayload(connection.Id, connection.Name);
@@ -118,6 +125,7 @@ public class ConnectionService(
             };
             await _outboxMessageRepository.AddMessageAsync(message, cancellationToken);
             await _connectionRepository.MarkDeletingAsync(id, cancellationToken);
+            await _unitOfWork.SaveChangesAsync(cancellationToken);
         }, ct);
     }
     public async Task<List<ConnectionListDto>> GetDeletedConnectionsAsync(int page, int pageSize, CancellationToken ct)

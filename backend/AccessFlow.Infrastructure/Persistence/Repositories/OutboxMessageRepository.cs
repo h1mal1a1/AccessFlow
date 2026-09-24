@@ -11,6 +11,5 @@ public class OutboxMessageRepository(AppDbContext dbContext) : IOutboxMessageRep
     public async Task AddMessageAsync(OutboxMessage message, CancellationToken cancellationToken)
     {
         await _dbContext.OutboxMessages.AddAsync(message, cancellationToken);
-        await _dbContext.SaveChangesAsync(cancellationToken);
     }
 }

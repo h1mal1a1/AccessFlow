@@ -11,14 +11,14 @@ public class GlobalExceptionHandler : IExceptionHandler
     public async ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception,
         CancellationToken cancellationToken)
     {
-        if (exception is ConnectionConflictException)
+        if (exception is ConnectionConflictException or ClientConflictException)
         {
             httpContext.Response.StatusCode = StatusCodes.Status409Conflict;
             await httpContext.Response.WriteAsJsonAsync(
                 new ProblemDetails
                 {
                     Status = StatusCodes.Status409Conflict,
-                    Title = "Connection conflict",
+                    Title = "Resource conflict",
                     Detail = exception.Message
                 },
                 cancellationToken
@@ -38,6 +38,22 @@ public class GlobalExceptionHandler : IExceptionHandler
                 Detail = exception.Message
             },
             cancellationToken);
+
+            return true;
+        }
+
+        if (exception is ConnectionInvalidStateException)
+        {
+            httpContext.Response.StatusCode = StatusCodes.Status409Conflict;
+
+            await httpContext.Response.WriteAsJsonAsync(
+                new ProblemDetails
+                {
+                    Status = StatusCodes.Status409Conflict,
+                    Title = "Connection state conflict",
+                    Detail = exception.Message
+                },
+                cancellationToken);
 
             return true;
         }

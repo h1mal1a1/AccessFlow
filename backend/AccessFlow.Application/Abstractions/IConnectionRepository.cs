@@ -11,5 +11,5 @@ public interface IConnectionRepository
     Task AddConnectionAsync(Connection connection, CancellationToken cancellationToken);
     Task MarkDeletingAsync(long id, CancellationToken cancellationToken);
     Task<List<Connection>> GetDeletedConnectionsAsync(int page, int pageSize, CancellationToken cancellationToken);
-
+    Task<Connection> GetConnectionForUpdateAsync(long id, CancellationToken ct);
 }

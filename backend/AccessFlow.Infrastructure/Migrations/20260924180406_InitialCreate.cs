@@ -162,14 +162,18 @@ namespace AccessFlow.Infrastructure.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
-                name: "ix_clients_email",
+                name: "ux_clients_email",
                 table: "clients",
-                column: "email");
+                column: "email",
+                unique: true,
+                filter: "\"status\" <> 'Deleted'");
 
             migrationBuilder.CreateIndex(
-                name: "ix_clients_phone_number",
+                name: "ux_clients_phone_number",
                 table: "clients",
-                column: "phone_number");
+                column: "phone_number",
+                unique: true,
+                filter: "\"status\" <> 'Deleted'");
 
             migrationBuilder.CreateIndex(
                 name: "IX_connections_id_client",

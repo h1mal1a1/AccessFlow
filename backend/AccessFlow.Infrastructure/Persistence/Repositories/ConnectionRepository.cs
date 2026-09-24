@@ -1,5 +1,4 @@
 using AccessFlow.Application.Abstractions;
-using Npgsql;
 using AccessFlow.Infrastructure.Persistence.Data;
 using AccessFlow.Domain.Entities;
 using AccessFlow.Domain.Constants;
@@ -32,19 +31,6 @@ public class ConnectionRepository(AppDbContext dbContext) : IConnectionRepositor
     public async Task AddConnectionAsync(Connection connection, CancellationToken cancellationToken)
     {
         await _dbContext.Connections.AddAsync(connection, cancellationToken);
-        try
-        {
-            await _dbContext.SaveChangesAsync(cancellationToken);
-        }
-        catch (DbUpdateException ex)
-            when (ex.InnerException is PostgresException
-            {
-                SqlState: PostgresErrorCodes.UniqueViolation
-            })
-        {
-            throw new ConnectionConflictException(
-                "Connection with the same IdExternal, Name or SubUrl already exists.");
-        }
     }
     public async Task MarkDeletingAsync(long id, CancellationToken cancellationToken)
     {
@@ -52,7 +38,6 @@ public class ConnectionRepository(AppDbContext dbContext) : IConnectionRepositor
             throw new ConnectionNotFoundException(id);
         connection.Status = ConnectionStatus.Deleting;
         connection.UpdatedAt = DateTimeOffset.UtcNow;
-        await _dbContext.SaveChangesAsync(cancellationToken);
     }
     public async Task<List<Connection>> GetDeletedConnectionsAsync(int page, int pageSize,
         CancellationToken cancellationToken)
@@ -66,4 +51,10 @@ public class ConnectionRepository(AppDbContext dbContext) : IConnectionRepositor
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<Connection> GetConnectionForUpdateAsync(long id, CancellationToken ct)
+    {
+        return await _dbContext.Connections.FromSqlInterpolated($"SELECT * FROM connections WHERE id = {id} FOR UPDATE")
+            .FirstOrDefaultAsync(ct) ??
+            throw new ConnectionNotFoundException(id);
+    }
 }

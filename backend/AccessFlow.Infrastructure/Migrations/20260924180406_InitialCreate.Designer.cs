@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AccessFlow.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260916112647_InitialCreate")]
+    [Migration("20260924180406_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -140,10 +140,14 @@ namespace AccessFlow.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
-                        .HasDatabaseName("ix_clients_email");
+                        .IsUnique()
+                        .HasDatabaseName("ux_clients_email")
+                        .HasFilter("\"status\" <> 'Deleted'");
 
                     b.HasIndex("PhoneNumber")
-                        .HasDatabaseName("ix_clients_phone_number");
+                        .IsUnique()
+                        .HasDatabaseName("ux_clients_phone_number")
+                        .HasFilter("\"status\" <> 'Deleted'");
 
                     b.ToTable("clients", (string)null);
                 });

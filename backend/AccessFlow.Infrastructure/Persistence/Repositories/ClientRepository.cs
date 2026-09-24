@@ -13,7 +13,6 @@ public class ClientRepository(AppDbContext dbContext) : IClientRepository
     public async Task<Client> GetClientAsync(long id, CancellationToken cancellationToken) =>
         await _dbContext.Clients.FirstOrDefaultAsync(x => x.Id == id, cancellationToken) ??
             throw new ClientNotFoundException(id);
-
     /// <summary>
     /// Получает клиента по идентификатору с блокировкой строки FOR UPDATE. Значение id передаётся через 
     /// FromSqlInterpolated и параметризуется, поэтому не подставляется напрямую в SQL и не создаёт SQL injection.
@@ -36,7 +35,6 @@ public class ClientRepository(AppDbContext dbContext) : IClientRepository
         CancellationToken cancellationToken) =>
             await _dbContext.Clients.Where(cli => listIds.Contains(cli.Id))
                 .ToListAsync(cancellationToken);
-
     public async Task<List<Client>> GetClientsAsync(int page, int pageSize, CancellationToken cancellationToken) =>
         await _dbContext.Clients
             .OrderBy(x => x.Id)
@@ -46,7 +44,6 @@ public class ClientRepository(AppDbContext dbContext) : IClientRepository
     public async Task AddClientAsync(Client client, CancellationToken cancellationToken)
     {
         await _dbContext.Clients.AddAsync(client, cancellationToken);
-        await _dbContext.SaveChangesAsync(cancellationToken);
     }
     public async Task UpdateClientAsync(long id, string email, string phoneNumber, string? comment,
         CancellationToken cancellationToken)
@@ -57,7 +54,6 @@ public class ClientRepository(AppDbContext dbContext) : IClientRepository
         client.Email = email;
         client.PhoneNumber = phoneNumber;
         client.UpdatedAt = DateTimeOffset.UtcNow;
-        await _dbContext.SaveChangesAsync(cancellationToken);
     }
     public async Task<List<Client>> GetDeletedClientsAsync(int page, int pageSize, CancellationToken cancellationToken)
     {

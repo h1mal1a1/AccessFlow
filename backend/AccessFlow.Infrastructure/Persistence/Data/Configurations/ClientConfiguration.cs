@@ -44,9 +44,13 @@ public class ClientConfiguration : IEntityTypeConfiguration<Client>
             .IsRequired();
 
         builder.HasIndex(x => x.Email)
-            .HasDatabaseName("ix_clients_email");
+            .HasDatabaseName("ux_clients_email")
+            .IsUnique()
+            .HasFilter("\"status\" <> 'Deleted'");
 
         builder.HasIndex(x => x.PhoneNumber)
-            .HasDatabaseName("ix_clients_phone_number");
+            .HasDatabaseName("ux_clients_phone_number")
+            .IsUnique()
+            .HasFilter("\"status\" <> 'Deleted'");
     }
 }
