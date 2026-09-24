@@ -16,3 +16,7 @@ env/.env.db
 
 pg/data/
 vps.token
+
+changed_files.txt
+AccessFlow_CodeReview_TODO.md
+arch.ps1
