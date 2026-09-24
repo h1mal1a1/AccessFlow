@@ -5,7 +5,6 @@ using AccessFlow.Application.Clients.DTOs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
-
 namespace AccessFlow.Api.Controllers;
 
 [ApiController]
@@ -21,19 +20,10 @@ public class ClientsController(IClientService clientService, IOptions<Pagination
         => await _clientService.GetClientAsync(id, cancellationToken);
 
     [HttpGet]
-    public async Task<List<ClientDto>> GetClients(int page = 1, int? pageSize = null,
-        CancellationToken cancellationToken = default)
+    public async Task<List<ClientDto>> GetClients(int page = 1, int? pageSize = null, CancellationToken ct = default)
     {
-        var actualPageSize = pageSize ?? _paginationOptions.DefaultPageSize;
-        if (page < 1)
-            page = 1;
-
-        if (actualPageSize > _paginationOptions.MaxPageSize)
-            actualPageSize = _paginationOptions.MaxPageSize;
-        if (actualPageSize < 1)
-            actualPageSize = _paginationOptions.DefaultPageSize;
-
-        return await _clientService.GetClientsAsync(page, actualPageSize, cancellationToken);
+        var (pageNumber, actualPageSize) = PaginationHelper.Normalize(page, pageSize, _paginationOptions);
+        return await _clientService.GetClientsAsync(pageNumber, actualPageSize, ct);
     }
 
     [HttpPost]
@@ -62,17 +52,10 @@ public class ClientsController(IClientService clientService, IOptions<Pagination
 
     [HttpGet("deleted")]
     public async Task<List<ClientDto>> GetDeletedClients(int page = 1, int? pageSize = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken ct = default)
     {
-        var actualPageSize = pageSize ?? _paginationOptions.DefaultPageSize;
-        if (page < 1)
-            page = 1;
-
-        if (actualPageSize > _paginationOptions.MaxPageSize)
-            actualPageSize = _paginationOptions.MaxPageSize;
-        if (actualPageSize < 1)
-            actualPageSize = _paginationOptions.DefaultPageSize;
-        return await _clientService.GetDeletedClientsAsync(page, actualPageSize, cancellationToken);
+        var (pageNumber, actualPageSize) = PaginationHelper.Normalize(page, pageSize, _paginationOptions);
+        return await _clientService.GetDeletedClientsAsync(pageNumber, actualPageSize, ct);
     }
 
 }

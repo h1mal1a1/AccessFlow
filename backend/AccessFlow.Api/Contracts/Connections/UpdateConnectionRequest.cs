@@ -1,3 +1,7 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace AccessFlow.Api.Contracts.Connections;
 
-public sealed record UpdateConnectionRequest(string Name);
+public sealed record UpdateConnectionRequest(
+    [property: Required, StringLength(100, MinimumLength = 1)] string Name
+);

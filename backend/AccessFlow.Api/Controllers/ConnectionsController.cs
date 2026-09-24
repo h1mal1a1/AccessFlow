@@ -23,16 +23,8 @@ public class ConnectionsController(IConnectionService connectionService, IOption
     public async Task<List<ConnectionListDto>> GetConnections(int page = 1, int? pageSize = null,
         CancellationToken ct = default)
     {
-        var actualPageSize = pageSize ?? _paginationOptions.DefaultPageSize;
-        if (page < 1)
-            page = 1;
-
-        if (actualPageSize > _paginationOptions.MaxPageSize)
-            actualPageSize = _paginationOptions.MaxPageSize;
-        if (actualPageSize < 1)
-            actualPageSize = _paginationOptions.DefaultPageSize;
-
-        return await _connectionService.GetConnectionsAsync(page, actualPageSize, ct);
+        var (pageNumber, actualPageSize) = PaginationHelper.Normalize(page, pageSize, _paginationOptions);
+        return await _connectionService.GetConnectionsAsync(pageNumber, actualPageSize, ct);
     }
 
     [HttpPost]
@@ -47,7 +39,7 @@ public class ConnectionsController(IConnectionService connectionService, IOption
     public async Task<IActionResult> DeleteConnection(long id, CancellationToken ct)
     {
         await _connectionService.DeleteConnectionAsync(id, ct);
-        return NoContent();
+        return Accepted();
     }
 
     [HttpPut("{id:long}")]
@@ -55,21 +47,14 @@ public class ConnectionsController(IConnectionService connectionService, IOption
     {
         var updateConnectionDto = new UpdateConnectionDto(request.Name);
         await _connectionService.UpdateConnectionAsync(id, updateConnectionDto, ct);
-        return NoContent();
+        return Accepted();
     }
 
     [HttpGet("deleted")]
     public async Task<List<ConnectionListDto>> GetDeletedConnections(int page = 1, int? pageSize = null,
         CancellationToken ct = default)
     {
-        var actualPageSize = pageSize ?? _paginationOptions.DefaultPageSize;
-        if (page < 1)
-            page = 1;
-
-        if (actualPageSize > _paginationOptions.MaxPageSize)
-            actualPageSize = _paginationOptions.MaxPageSize;
-        if (actualPageSize < 1)
-            actualPageSize = _paginationOptions.DefaultPageSize;
-        return await _connectionService.GetDeletedConnectionsAsync(page, actualPageSize, ct);
+        var (pageNumber, actualPageSize) = PaginationHelper.Normalize(page, pageSize, _paginationOptions);
+        return await _connectionService.GetDeletedConnectionsAsync(pageNumber, actualPageSize, ct);
     }
 }
